@@ -25,7 +25,7 @@ find "$SOURCE_DIR" -type f -print0 | while IFS= read -r -d '' file; do
 
     # Upload the file
     echo "Uploading: $relative_path"
-    bunx wrangler r2 object put "$BUCKET/google-font-preview/avif/$relative_path" --file="$file" --ct="$CONTENT_TYPE"
+    bunx wrangler r2 object put "$BUCKET/google-font-preview/avif/$relative_path" --file="$file" --ct="$CONTENT_TYPE" --cache-control="public, max-age=31536000, immutable"
 done
 
 
