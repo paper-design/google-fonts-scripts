@@ -5,7 +5,7 @@ import { fetchGoogleFonts } from './fetch-google-fonts';
 import { findClosestVariantToNormalWeight } from './find-closest-variant-to-normal-weight';
 
 export const OUTPUT_DIR = './output';
-export const RAW_FONT_DATA_FILE = `${OUTPUT_DIR}/raw-font-data.json`;
+export const RAW_FONT_DATA_FILE = `${OUTPUT_DIR}/generated-font-data.json`;
 export const SVG_TARGET_DIR = `${OUTPUT_DIR}/svg`;
 
 async function main() {
@@ -13,7 +13,7 @@ async function main() {
   const data: google.fonts.WebfontFamily[] = await fetchGoogleFonts();
 
   // ----- Build out the typeface data ----- //
-  const typefaces = [];
+  const typefaces: Record<string, string[]> = {};
   /** Stores typeface names and URLs to load and generate an SVG from */
   const familiesToGenerate: Array<[string, string]> = [];
   for (const typeface of data) {
@@ -23,16 +23,11 @@ async function main() {
       continue;
     }
 
-    const face: Typeface = {
-      family: typeface.family,
-      variants: [],
-    };
-
+    typefaces[typeface.family] = [];
     for (const variant of typeface.variants) {
-      face.variants.push(variant);
+      const key = variant === 'regular' ? '400' : variant === 'italic' ? '400i' : variant.replace('italic', 'i');
+      typefaces[typeface.family].push(key);
     }
-
-    typefaces.push(face);
 
     // Build the SVG to generate info
     // Pick the best variant, we just use the closest to 400
