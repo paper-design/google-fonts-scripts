@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Font Bundle Viewer</title>
+    <style>
+      body {
+        font-family: system-ui, -apple-system, sans-serif;
+        margin: 0;
+        padding: 20px;
+        background: #f5f5f5;
+      }
+
+      .fonts-grid {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .font-container {
+        width: 289px;
+        height: 36px;
+        background: #eee;
+        display: flex;
+        align-items: center;
+        padding-left: 10px;
+      }
+
+      .font-container:hover {
+        background: #ddd;
+      }
+
+      .font-preview {
+        background-image: url('./font-bundle.avif');
+        background-repeat: no-repeat;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="container"></div>
+
+    <script>
+      const loadFontBundle = async () => {
+        try {
+          const response = await fetch('./font-bundle.json');
+          const fonts = await response.json();
+
+          const container = document.getElementById('container');
+          const fontsGrid = document.createElement('div');
+          fontsGrid.className = 'fonts-grid';
+
+          fonts.forEach((font) => {
+            const fontContainer = document.createElement('div');
+            fontContainer.className = 'font-container';
+
+            const fontPreview = document.createElement('div');
+            fontPreview.className = 'font-preview';
+
+            const standardHeight = 16;
+            const aspectRatio = font.w / font.h;
+            const standardWidth = Math.round(standardHeight * aspectRatio);
+            const scale = standardHeight / font.h;
+
+            fontPreview.style.width = `${standardWidth}px`;
+            fontPreview.style.height = `${standardHeight}px`;
+            fontPreview.style.backgroundSize = `${9226 * scale}px ${8969 * scale}px`;
+            fontPreview.style.backgroundPosition = `-${font.x * scale}px -${font.y * scale}px`;
+
+            fontContainer.appendChild(fontPreview);
+            fontsGrid.appendChild(fontContainer);
+          });
+
+          container.innerHTML = '';
+          container.appendChild(fontsGrid);
+        } catch (error) {
+          console.error('Error loading font bundle:', error);
+        }
+      };
+
+      window.addEventListener('load', loadFontBundle);
+    </script>
+  </body>
+</html>
