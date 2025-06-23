@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Font Bundle Viewer</title>
+    <link rel="preload" href="./font-bundle.avif" as="image" />
     <style>
       body {
         font-family: system-ui, -apple-system, sans-serif;
@@ -33,6 +34,16 @@
       .font-preview {
         background-image: url('./font-bundle.avif');
         background-repeat: no-repeat;
+
+        /* Hints the browser to create a compositing layer and optimize rendering. Without this, hovering causes huge frame drops and scrolling is. But when it's enabled
+        it uses a lot of memory. 250MB => 800MB */
+        will-change: transform;
+
+        /* translateZ keeps the memory low, but when scrolling and revealing more elements, they struggle to appear, as the big image gets decoded again. */
+        /* transform: translateZ(0); */
+
+        /* Same problem with virtualization / intersection observer. As
+         elements are revealed, the image gets decoded again. */
       }
     </style>
   </head>
