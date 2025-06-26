@@ -28,7 +28,7 @@ type FontMetadata = {
   f: string[];
 };
 
-const createFontBundles = async () => {
+const createFontChunks = async () => {
   console.log('📂 Reading font data from generated-font-data.json...');
 
   // Read the generated font data
@@ -214,9 +214,9 @@ const createFontBundles = async () => {
   };
 };
 
-createFontBundles()
+createFontChunks()
   .then((result) => {
-    console.log('\n🎊 Bundle creation completed!');
+    console.log('\n🎊 Chunk creation completed!');
     console.log(`📈 Summary: ${result.totalImages} fonts processed out of ${result.totalFontsInData} fonts in data`);
     if (result.missingFiles > 0) {
       console.log(`⚠️  ${result.missingFiles} fonts were skipped due to missing PNG files`);
@@ -231,6 +231,6 @@ createFontBundles()
     });
   })
   .catch((error) => {
-    console.error('💥 Error creating font bundles:', error);
+    console.error('💥 Error creating font chunks:', error);
     process.exit(1);
   });
