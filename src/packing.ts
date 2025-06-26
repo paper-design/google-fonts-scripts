@@ -24,7 +24,6 @@ type FontMetadata = {
   x: number;
   y: number;
   w: number;
-  h: number;
   ch: number;
   f: string[];
 };
@@ -169,7 +168,6 @@ const createFontBundles = async () => {
       x: box.x!,
       y: box.y!,
       w: box.w,
-      h: box.h,
       ch: chunkNumber,
       f: box.weights,
     }));
