@@ -1,47 +1,49 @@
 import { useEffect, useRef, useState } from 'react';
 
-import chunk1 from '../fonts/chunks/font-bundle-1.avif';
-import chunk2 from '../fonts/chunks/font-bundle-2.avif';
-import chunk3 from '../fonts/chunks/font-bundle-3.avif';
-import chunk4 from '../fonts/chunks/font-bundle-4.avif';
-import chunk5 from '../fonts/chunks/font-bundle-5.avif';
-import chunk6 from '../fonts/chunks/font-bundle-6.avif';
-import chunk7 from '../fonts/chunks/font-bundle-7.avif';
-import chunk8 from '../fonts/chunks/font-bundle-8.avif';
-import chunk9 from '../fonts/chunks/font-bundle-9.avif';
-import chunk10 from '../fonts/chunks/font-bundle-10.avif';
-import chunk11 from '../fonts/chunks/font-bundle-11.avif';
-import chunk12 from '../fonts/chunks/font-bundle-12.avif';
-import chunk13 from '../fonts/chunks/font-bundle-13.avif';
-import chunk14 from '../fonts/chunks/font-bundle-14.avif';
-import chunk15 from '../fonts/chunks/font-bundle-15.avif';
-import chunk16 from '../fonts/chunks/font-bundle-16.avif';
-import chunk17 from '../fonts/chunks/font-bundle-17.avif';
-import chunk18 from '../fonts/chunks/font-bundle-18.avif';
-import chunk19 from '../fonts/chunks/font-bundle-19.avif';
-import chunk20 from '../fonts/chunks/font-bundle-20.avif';
-import chunk21 from '../fonts/chunks/font-bundle-21.avif';
-import chunk22 from '../fonts/chunks/font-bundle-22.avif';
-import chunk23 from '../fonts/chunks/font-bundle-23.avif';
-import chunk24 from '../fonts/chunks/font-bundle-24.avif';
-import chunk25 from '../fonts/chunks/font-bundle-25.avif';
-import chunk26 from '../fonts/chunks/font-bundle-26.avif';
-import chunk27 from '../fonts/chunks/font-bundle-27.avif';
-import chunk28 from '../fonts/chunks/font-bundle-28.avif';
-import chunk29 from '../fonts/chunks/font-bundle-29.avif';
-import chunk30 from '../fonts/chunks/font-bundle-30.avif';
-import chunk31 from '../fonts/chunks/font-bundle-31.avif';
-import chunk32 from '../fonts/chunks/font-bundle-32.avif';
-import chunk33 from '../fonts/chunks/font-bundle-33.avif';
+import chunk1 from '../fonts/chunks/font-chunk-1.avif';
+import chunk2 from '../fonts/chunks/font-chunk-2.avif';
+import chunk3 from '../fonts/chunks/font-chunk-3.avif';
+import chunk4 from '../fonts/chunks/font-chunk-4.avif';
+import chunk5 from '../fonts/chunks/font-chunk-5.avif';
+import chunk6 from '../fonts/chunks/font-chunk-6.avif';
+import chunk7 from '../fonts/chunks/font-chunk-7.avif';
+import chunk8 from '../fonts/chunks/font-chunk-8.avif';
+import chunk9 from '../fonts/chunks/font-chunk-9.avif';
+import chunk10 from '../fonts/chunks/font-chunk-10.avif';
+import chunk11 from '../fonts/chunks/font-chunk-11.avif';
+import chunk12 from '../fonts/chunks/font-chunk-12.avif';
+import chunk13 from '../fonts/chunks/font-chunk-13.avif';
+import chunk14 from '../fonts/chunks/font-chunk-14.avif';
+import chunk15 from '../fonts/chunks/font-chunk-15.avif';
+import chunk16 from '../fonts/chunks/font-chunk-16.avif';
+import chunk17 from '../fonts/chunks/font-chunk-17.avif';
+import chunk18 from '../fonts/chunks/font-chunk-18.avif';
+import chunk19 from '../fonts/chunks/font-chunk-19.avif';
+import chunk20 from '../fonts/chunks/font-chunk-20.avif';
+import chunk21 from '../fonts/chunks/font-chunk-21.avif';
+import chunk22 from '../fonts/chunks/font-chunk-22.avif';
+import chunk23 from '../fonts/chunks/font-chunk-23.avif';
+import chunk24 from '../fonts/chunks/font-chunk-24.avif';
+import chunk25 from '../fonts/chunks/font-chunk-25.avif';
+import chunk26 from '../fonts/chunks/font-chunk-26.avif';
+import chunk27 from '../fonts/chunks/font-chunk-27.avif';
+import chunk28 from '../fonts/chunks/font-chunk-28.avif';
+import chunk29 from '../fonts/chunks/font-chunk-29.avif';
+import chunk30 from '../fonts/chunks/font-chunk-30.avif';
+import chunk31 from '../fonts/chunks/font-chunk-31.avif';
+import chunk32 from '../fonts/chunks/font-chunk-32.avif';
+import chunk33 from '../fonts/chunks/font-chunk-33.avif';
 
-import fontBundle from '../fonts/font-bundle.json';
+import fontBundle from '../fonts/fonts.json';
 
 type Font = {
+  n: string;
   ch: number;
   x: number;
   y: number;
   w: number;
   h: number;
+  f: string[];
 };
 
 type ChunkInfo = {
@@ -190,8 +192,6 @@ const FontBundleViewer = () => {
                 backgroundSize: `${chunkCanvasWidth * scale}px ${chunkCanvasHeight * scale}px`,
                 backgroundPosition: `-${font.x * scale}px -${font.y * scale}px`,
                 backgroundRepeat: 'no-repeat',
-                display: 'block',
-                flexShrink: '0',
               });
 
               fontContainer.appendChild(fontPreview);
@@ -233,7 +233,15 @@ const FontBundleViewer = () => {
       >
         <div className="flex flex-col">
           {fontBundle.map((font, index) => (
-            <div key={index} className="font-container w-[289px] h-9 flex items-center pl-2.5 hover:bg-gray-300" />
+            <div
+              key={index}
+              className="font-container w-[289px] h-9 flex items-center pl-2.5 hover:bg-gray-300"
+              onClick={() => {
+                const fontName = font.n;
+                const fontWeights = font.f.join(', ');
+                alert(`Font: ${fontName}\nWeights: ${fontWeights}`);
+              }}
+            />
           ))}
         </div>
       </div>

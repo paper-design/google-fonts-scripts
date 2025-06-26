@@ -8,8 +8,7 @@
   "scripts": {
     "generate-svg": "bun run src/generate-svg.ts",
     "generate-png-and-avif": "bun run src/generate-png-and-avif.ts",
-    "packing": "bun run src/packing.ts",
-    "start": "bunx serve output"
+    "packing": "bun run src/packing.ts"
   },
   "devDependencies": {
     "@types/bun": "latest",

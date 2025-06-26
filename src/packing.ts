@@ -5,7 +5,6 @@ import { join } from 'path'
 import { writeFile, mkdir } from 'fs/promises'
 import { existsSync } from 'fs'
 
-// Configuration: Number of fonts per chunk
 const FONTS_PER_CHUNK = 50
 const DESIRED_HEIGHT = 32 // 16px-tall container in Paper, x2 for high DPI screens 
 
@@ -156,7 +155,7 @@ const createFontBundles = async () => {
     }))
     
     // Create optimized image format composite for this chunk
-    const outputPath = join(process.cwd(), 'output', 'chunks', `font-bundle-${chunkNumber}.avif`)
+    const outputPath = join(process.cwd(), 'output', 'chunks', `font-chunk-${chunkNumber}.avif`)
     await canvas
       .composite(compositeOps)
       .avif({ quality: 70 })
@@ -201,7 +200,7 @@ const createFontBundles = async () => {
   const jsonLines = allFontMetadata.map(font => JSON.stringify(font))
   const compactJson = '[\n' + jsonLines.join(',\n') + '\n]'
   
-  const jsonOutputPath = join(process.cwd(), 'output', 'font-bundle.json')
+  const jsonOutputPath = join(process.cwd(), 'output', 'fonts.json')
   await writeFile(jsonOutputPath, compactJson, 'utf8')
   
   console.log(`📄 Unified font metadata JSON created: ${jsonOutputPath}`)
