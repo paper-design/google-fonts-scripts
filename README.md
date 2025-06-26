@@ -71,14 +71,14 @@ Once you have individual `/output/png/` files and `/output/generated-font-data.j
 - 33 chunks containing 50 font previews each, in `/output/chunks/`
 - `/output/fonts.json` which contains metadata about fonts and the chunks
 
-These are the only files you need to create the font picker in Paper.
+These are the only files you need to create the font picker.
 
 ⚠️ Important: If some fonts of `generated-font-data.json` do not have a matching PNG file, they will be excluded from the chunks. A warning will be shown during `bun packing`.
 
 #### Demo
 
 To see a font picker demo with the fonts you just packed:
-- Copy `/output/chunks/` and `/output/font-bundle.json` into `/example/fonts/`
+- Copy `/output/chunks/` and `/output/font.json` into `/example/fonts/`
 - If the number of chunks has changed, update imports in `pages/index.tsx` and the `chunks` variable.
 - In `/example`, run: `bun i` and `bun dev`
 

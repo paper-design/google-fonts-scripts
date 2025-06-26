@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import type { StaticImageData } from 'next/image';
 
 import chunk1 from '../fonts/chunks/font-chunk-1.avif';
 import chunk2 from '../fonts/chunks/font-chunk-2.avif';
@@ -52,7 +53,7 @@ type ChunkInfo = {
   maxHeight: number;
 };
 
-const chunks = [
+const chunks: StaticImageData[] = [
   chunk1,
   chunk2,
   chunk3,
@@ -88,11 +89,84 @@ const chunks = [
   chunk33,
 ];
 
+const FontPreview = ({ font, chunkInfo }: { font: Font; chunkInfo: Record<number, ChunkInfo> }) => {
+  const standardHeight = 16;
+  const aspectRatio = font.w / font.h;
+  const standardWidth = Math.round(standardHeight * aspectRatio);
+  const scale = standardHeight / font.h;
+
+  const chunkCanvasWidth = chunkInfo[font.ch]?.maxWidth || 0;
+  const chunkCanvasHeight = chunkInfo[font.ch]?.maxHeight || 0;
+  const chunkUrl = chunks[font.ch - 1]?.src;
+
+  if (!chunkUrl || !chunkInfo[font.ch]) {
+    return null;
+  }
+
+  return (
+    <div
+      className="bg-no-repeat"
+      style={{
+        width: `${standardWidth}px`,
+        height: `${standardHeight}px`,
+        backgroundImage: `url(${chunkUrl})`,
+        backgroundSize: `${chunkCanvasWidth * scale}px ${chunkCanvasHeight * scale}px`,
+        backgroundPosition: `-${font.x * scale}px -${font.y * scale}px`,
+      }}
+    />
+  );
+};
+
+const FontContainer = ({
+  font,
+  index,
+  chunkInfo,
+  scrollContainer,
+}: {
+  font: Font;
+  index: number;
+  chunkInfo: Record<number, ChunkInfo>;
+  scrollContainer: HTMLDivElement | null;
+}) => {
+  const [isVisible, setIsVisible] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!containerRef.current || !scrollContainer) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          setIsVisible(entry.isIntersecting);
+        });
+      },
+      { root: scrollContainer, rootMargin: '2000px' }
+    );
+
+    observer.observe(containerRef.current);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [scrollContainer]);
+
+  const handleClick = () => {
+    const fontName = font.n;
+    const fontWeights = font.f.join(', ');
+    alert(`Font: ${fontName}\nWeights: ${fontWeights}`);
+  };
+
+  return (
+    <div ref={containerRef} className="w-[289px] h-9 flex items-center pl-2.5 hover:bg-gray-300" onClick={handleClick}>
+      {isVisible && <FontPreview font={font} chunkInfo={chunkInfo} />}
+    </div>
+  );
+};
+
 const FontBundleViewer = () => {
   const [chunkInfo, setChunkInfo] = useState<Record<number, ChunkInfo>>({});
   const [error, setError] = useState<string | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const observerRef = useRef<IntersectionObserver | null>(null);
 
   // Preload all chunk images
   useEffect(() => {
@@ -151,76 +225,6 @@ const FontBundleViewer = () => {
     loadFontBundle();
   }, []);
 
-  useEffect(() => {
-    if (!scrollContainerRef.current || fontBundle.length === 0 || Object.keys(chunkInfo).length === 0) return;
-
-    // Create a map to get font index from element
-    const fontContainerElements = Array.from(scrollContainerRef.current.querySelectorAll('.font-container'));
-
-    // Intersection Observer for toggling background-image
-    observerRef.current = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          const fontContainer = entry.target as HTMLDivElement;
-
-          if (entry.isIntersecting) {
-            // Find the font index based on the element position
-            const fontIndex = fontContainerElements.indexOf(fontContainer);
-            const font = fontBundle[fontIndex];
-
-            if (font && chunkInfo[font.ch] && fontIndex >= 0) {
-              // Create and add font-preview div when visible
-              const fontPreview = document.createElement('div');
-              fontPreview.className = 'font-preview';
-
-              const standardHeight = 16;
-              const aspectRatio = font.w / font.h;
-              const standardWidth = Math.round(standardHeight * aspectRatio);
-              const scale = standardHeight / font.h;
-
-              // Get chunk canvas dimensions
-              const chunkCanvasWidth = chunkInfo[font.ch].maxWidth;
-              const chunkCanvasHeight = chunkInfo[font.ch].maxHeight;
-
-              const chunkUrl = chunks[font.ch - 1].src;
-
-              // Set all styles at once
-              Object.assign(fontPreview.style, {
-                width: `${standardWidth}px`,
-                height: `${standardHeight}px`,
-                backgroundImage: `url(${chunkUrl})`,
-                backgroundSize: `${chunkCanvasWidth * scale}px ${chunkCanvasHeight * scale}px`,
-                backgroundPosition: `-${font.x * scale}px -${font.y * scale}px`,
-                backgroundRepeat: 'no-repeat',
-              });
-
-              fontContainer.appendChild(fontPreview);
-            }
-          } else {
-            // Remove font-preview div when not visible to save memory
-            const fontPreview = fontContainer.querySelector('.font-preview');
-            if (fontPreview) {
-              fontContainer.removeChild(fontPreview);
-            }
-          }
-        });
-      },
-      {
-        root: scrollContainerRef.current,
-        rootMargin: '2000px',
-      }
-    );
-
-    // Observe all font containers
-    fontContainerElements.forEach((container) => {
-      observerRef.current?.observe(container);
-    });
-
-    return () => {
-      observerRef.current?.disconnect();
-    };
-  }, [fontBundle, chunkInfo]);
-
   if (error) {
     return <div className="p-5 text-red-500">Error: {error}</div>;
   }
@@ -233,14 +237,12 @@ const FontBundleViewer = () => {
       >
         <div className="flex flex-col">
           {fontBundle.map((font, index) => (
-            <div
+            <FontContainer
               key={index}
-              className="font-container w-[289px] h-9 flex items-center pl-2.5 hover:bg-gray-300"
-              onClick={() => {
-                const fontName = font.n;
-                const fontWeights = font.f.join(', ');
-                alert(`Font: ${fontName}\nWeights: ${fontWeights}`);
-              }}
+              font={font}
+              index={index}
+              chunkInfo={chunkInfo}
+              scrollContainer={scrollContainerRef.current}
             />
           ))}
         </div>
