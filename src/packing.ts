@@ -7,6 +7,7 @@ import { existsSync } from 'fs'
 
 // Configuration: Number of fonts per chunk
 const FONTS_PER_CHUNK = 50
+const DESIRED_HEIGHT = 32 // 16px-tall container in Paper, x2 for high DPI screens 
 
 type FontBox = {
   w: number
@@ -67,17 +68,30 @@ const createFontBundles = async () => {
     }
     
     try {
-      const buffer = await sharp(filePath).png().toBuffer()
-      const metadata = await sharp(buffer).metadata()
+      const originalBuffer = await sharp(filePath).png().toBuffer()
+      const metadata = await sharp(originalBuffer).metadata()
       
       if (metadata.width && metadata.height) {
+        // Calculate new dimensions while preserving aspect ratio
+        const originalWidth = metadata.width
+        const originalHeight = metadata.height
+        const aspectRatio = originalWidth / originalHeight
+        const newWidth = Math.round(DESIRED_HEIGHT * aspectRatio)
+        const newHeight = DESIRED_HEIGHT
+        
+        // Resize the image in memory
+        const resizedBuffer = await sharp(originalBuffer)
+          .resize(newWidth, newHeight)
+          .png()
+          .toBuffer()
+        
         boxes.push({
-          w: metadata.width,
-          h: metadata.height,
+          w: newWidth,
+          h: newHeight,
           fontName,
           fileName,
           weights: weights as string[],
-          buffer
+          buffer: resizedBuffer
         })
       } else {
         console.warn(`⚠️  Could not read dimensions for "${fontName}" (${fileName}.png)`)
