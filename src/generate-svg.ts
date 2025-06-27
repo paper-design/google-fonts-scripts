@@ -3,9 +3,9 @@ import makerjs from 'makerjs';
 import { optimize } from 'svgo';
 import { fetchGoogleFonts } from './fetch-google-fonts';
 import { findClosestVariantToNormalWeight } from './find-closest-variant-to-normal-weight';
+import { FAMILIES_TO_SKIP_PREVIEW_IMAGE } from './families-to-skip';
 
 export const OUTPUT_DIR = './output';
-export const RAW_FONT_DATA_FILE = `${OUTPUT_DIR}/generated-font-data.json`;
 export const SVG_TARGET_DIR = `${OUTPUT_DIR}/svg`;
 
 async function main() {
@@ -22,6 +22,12 @@ async function main() {
       console.warn(`Skipping typeface: ${typeface}`);
       continue;
     }
+    
+    // Skip fonts that are in the skip list
+    if (FAMILIES_TO_SKIP_PREVIEW_IMAGE.has(typeface.family)) {
+      console.log(`Skipping ${typeface.family} - in skip list`);
+      continue;
+    }
 
     typefaces[typeface.family] = [];
     for (const variant of typeface.variants) {
@@ -34,9 +40,6 @@ async function main() {
     const closestVariant = findClosestVariantToNormalWeight(typeface.variants);
     familiesToGenerate.push([typeface.family, typeface.files[closestVariant]]);
   }
-
-  // ----- Write the typeface data to a file ----- //
-  await Bun.write(RAW_FONT_DATA_FILE, JSON.stringify(typefaces, null, 2));
 
   // ----- Generate the SVGs ----- //
 

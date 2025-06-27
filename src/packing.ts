@@ -4,6 +4,7 @@ import { readFile } from 'fs/promises';
 import { join } from 'path';
 import { writeFile, mkdir } from 'fs/promises';
 import { existsSync } from 'fs';
+import { FAMILIES_TO_SKIP_PREVIEW_IMAGE } from './families-to-skip';
 
 const FONTS_PER_CHUNK = 50;
 const DESIRED_HEIGHT = 32; // 16px-tall container in Paper, x2 for high DPI screens
@@ -16,7 +17,8 @@ type FontBox = {
   fontName: string;
   fileName: string;
   weights: string[];
-  buffer: Buffer;
+  buffer?: Buffer;
+  noPreview?: boolean;
 };
 
 type FontMetadata = {
@@ -26,13 +28,14 @@ type FontMetadata = {
   w: number;
   ch: number;
   f: string[];
+  noPreview?: boolean;
 };
 
 const createFontChunks = async () => {
-  console.log('📂 Reading font data from generated-font-data.json...');
+  console.log('📂 Reading font data from metadata.json...');
 
   // Read the generated font data
-  const fontDataPath = join(process.cwd(), 'output', 'generated-font-data.json');
+  const fontDataPath = join(process.cwd(), 'output', 'metadata.json');
   const fontDataContent = await readFile(fontDataPath, 'utf8');
   const fontData = JSON.parse(fontDataContent);
 
@@ -42,7 +45,7 @@ const createFontChunks = async () => {
   console.log(`📊 Found ${fontEntries.length} fonts in font data`);
 
   // Ensure chunks directory exists
-  const chunksDir = join(process.cwd(), 'output', 'chunks');
+  const chunksDir = join(process.cwd(), 'output', 'font-chunks');
   if (!existsSync(chunksDir)) {
     await mkdir(chunksDir, { recursive: true });
     console.log('📁 Created chunks directory');
@@ -58,10 +61,33 @@ const createFontChunks = async () => {
     const fileName = fontName.toLowerCase().replace(/\s+/g, '-');
     const filePath = join(pngDir, `${fileName}.png`);
 
+    // Skip fonts that are expected to not have preview images
+    if (FAMILIES_TO_SKIP_PREVIEW_IMAGE.has(fontName)) {
+      boxes.push({
+        w: 0,
+        h: 0,
+        fontName,
+        fileName,
+        weights: weights as string[],
+        noPreview: true,
+      });
+      continue;
+    }
+
     // Check if file exists before trying to process it
     if (!existsSync(filePath)) {
       console.warn(`⚠️  PNG file missing for font "${fontName}" (expected: ${fileName}.png)`);
       missingFiles++;
+      
+      // Add placeholder entry for missing PNG
+      boxes.push({
+        w: 0,
+        h: 0,
+        fontName,
+        fileName,
+        weights: weights as string[],
+        noPreview: true,
+      });
       continue;
     }
 
@@ -91,40 +117,63 @@ const createFontChunks = async () => {
       } else {
         console.warn(`⚠️  Could not read dimensions for "${fontName}" (${fileName}.png)`);
         missingFiles++;
+        
+        // Add placeholder entry for invalid PNG
+        boxes.push({
+          w: 0,
+          h: 0,
+          fontName,
+          fileName,
+          weights: weights as string[],
+          noPreview: true,
+        });
       }
     } catch (error) {
       console.warn(
         `⚠️  Error processing ${fileName}.png for font "${fontName}": ${error instanceof Error ? error.message : error}`
       );
       missingFiles++;
+      
+      // Add placeholder entry for errored PNG
+      boxes.push({
+        w: 0,
+        h: 0,
+        fontName,
+        fileName,
+        weights: weights as string[],
+        noPreview: true,
+      });
     }
   }
 
-  console.log(`✅ Successfully processed ${boxes.length} images`);
+  const validBoxes = boxes.filter((box) => !box.noPreview);
+  const noPreviewBoxes = boxes.filter((box) => box.noPreview);
+
+  console.log(`✅ Successfully processed ${validBoxes.length} images`);
   if (missingFiles > 0) {
-    console.log(`⚠️  ${missingFiles} fonts skipped due to missing or invalid PNG files`);
+    console.log(`⚠️  ${missingFiles} fonts marked as no preview due to missing or invalid PNG files`);
   }
 
   // Ensure boxes are sorted alphabetically by font name
   boxes.sort((a, b) => a.fontName.localeCompare(b.fontName));
 
-  // Split boxes into chunks
-  const chunks: FontBox[][] = [];
-  for (let i = 0; i < boxes.length; i += FONTS_PER_CHUNK) {
-    chunks.push(boxes.slice(i, i + FONTS_PER_CHUNK));
+  // Split valid boxes into chunks for packing
+  const validChunks: FontBox[][] = [];
+  for (let i = 0; i < validBoxes.length; i += FONTS_PER_CHUNK) {
+    validChunks.push(validBoxes.slice(i, i + FONTS_PER_CHUNK));
   }
 
-  console.log(`📦 Split into ${chunks.length} chunks of ${FONTS_PER_CHUNK} fonts each`);
+  console.log(`📦 Split valid images into ${validChunks.length} chunks of ${FONTS_PER_CHUNK} fonts each`);
 
   const results = [];
   const allFontMetadata: FontMetadata[] = [];
 
-  // Process each chunk
-  for (let chunkIndex = 0; chunkIndex < chunks.length; chunkIndex++) {
-    const chunk = chunks[chunkIndex];
+  // Process each chunk of valid boxes
+  for (let chunkIndex = 0; chunkIndex < validChunks.length; chunkIndex++) {
+    const chunk = validChunks[chunkIndex];
     const chunkNumber = chunkIndex + 1;
 
-    console.log(`\n🎯 Processing chunk ${chunkNumber}/${chunks.length} (${chunk.length} fonts)...`);
+    console.log(`\n🎯 Processing chunk ${chunkNumber}/${validChunks.length} (${chunk.length} fonts)...`);
 
     // Use potpack to calculate optimal layout for this chunk
     const result = potpack(chunk);
@@ -147,13 +196,13 @@ const createFontChunks = async () => {
 
     // Prepare composite operations for all positioned images in this chunk
     const compositeOps = chunk.map((box) => ({
-      input: box.buffer,
+      input: box.buffer!,
       top: box.y!,
       left: box.x!,
     }));
 
     // Create optimized image format composite for this chunk
-    const outputPath = join(process.cwd(), 'output', 'chunks', `font-chunk-${chunkNumber}.avif`);
+    const outputPath = join(process.cwd(), 'output', 'font-chunks', `font-chunk-${chunkNumber}.avif`);
     await canvas
       .composite(compositeOps)
       .avif({ quality: 70 })
@@ -187,6 +236,19 @@ const createFontChunks = async () => {
     });
   }
 
+  // Add metadata for fonts with no preview
+  const noPreviewMetadata: FontMetadata[] = noPreviewBoxes.map((box) => ({
+    n: box.fontName,
+    x: 0,
+    y: 0,
+    w: 0,
+    ch: 0,
+    f: box.weights,
+    noPreview: true,
+  }));
+
+  allFontMetadata.push(...noPreviewMetadata);
+
   // Write the single JSON file with all font metadata
   console.log('\n📝 Generating unified font metadata JSON...');
 
@@ -197,15 +259,15 @@ const createFontChunks = async () => {
   const jsonLines = allFontMetadata.map((font) => JSON.stringify(font));
   const compactJson = '[\n' + jsonLines.join(',\n') + '\n]';
 
-  const jsonOutputPath = join(process.cwd(), 'output', 'fonts.json');
+  const jsonOutputPath = join(process.cwd(), 'output', 'font-chunks', 'fonts.json');
   await writeFile(jsonOutputPath, compactJson, 'utf8');
 
   console.log(`📄 Unified font metadata JSON created: ${jsonOutputPath}`);
-  console.log(`✨ All ${chunks.length} chunks created successfully!`);
+  console.log(`✨ All ${validChunks.length} chunks created successfully!`);
 
   return {
-    totalChunks: chunks.length,
-    totalImages: boxes.length,
+    totalChunks: validChunks.length,
+    totalImages: validBoxes.length,
     totalFontsInData: fontEntries.length,
     missingFiles,
     fontsPerChunk: FONTS_PER_CHUNK,
@@ -219,7 +281,7 @@ createFontChunks()
     console.log('\n🎊 Chunk creation completed!');
     console.log(`📈 Summary: ${result.totalImages} fonts processed out of ${result.totalFontsInData} fonts in data`);
     if (result.missingFiles > 0) {
-      console.log(`⚠️  ${result.missingFiles} fonts were skipped due to missing PNG files`);
+      console.log(`⚠️  ${result.missingFiles} fonts were marked as no preview due to missing PNG files`);
     }
     console.log(`📦 Split into ${result.totalChunks} chunks`);
     result.chunks.forEach((chunk) => {

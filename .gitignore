@@ -174,5 +174,5 @@ dist
 # Finder (MacOS) folder config
 .DS_Store
 
-example/fonts/
+example/public/font-chunks/
 

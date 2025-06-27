@@ -1,15 +1,33 @@
 # google-fonts-scripts
 
-At the moment, the SVG path generates the `/output/generated-font-data.json` file and the PNG path only generates PNGs.
+This repository downloads Google Fonts data, generates preview images for each font, and combines all the font previews into small chunk images.
 
-If you want to use the AVIF path, you'll need `cargo` and `cavif` installed locally.
+### Instructions
 
-### Output:
+Make sure to add a Google Fonts API key in a .env file as `GOOGLE_FONTS_API_KEY`. You can get one for free here: https://developers.google.com/fonts/docs/developer_api
 
-#### Minimal JSON data about Google fonts
+We commit the output directory because we only generate new PNGs if they're not yet generated. `metadata.json` will be regenerated each time.
+
+```bash
+# install deps
+bun install
+
+# run all scripts
+bun all
+
+# check output folder
+```
+
+`bun all` will run `bun metadata`, `bun png`, and `bun packing`.
+
+
+### Output
+
+#### Metadata
+
+`bun metadata` generates `output/metadata.json`:
 
 ```ts
-// /output/generated-font-data.json
 {
   'ABeeZee': ['400', '400i'],
   'Abhaya Libre': ['400', '500', '600', '700', '800'],
@@ -17,9 +35,19 @@ If you want to use the AVIF path, you'll need `cargo` and `cavif` installed loca
 };
 ```
 
-#### SVG previews of each font
+#### PNG previews
 
-Each SVG uses the font's own name as its preview text.
+`bun png` generates PNG files:
+
+```
+/output/png/abeezee.png
+/output/png/abhaya-libre.png
+...etc
+```
+
+#### SVG previews
+
+`bun png` generates SVG files:
 
 ```
 /output/svg/abeezee.svg
@@ -27,75 +55,34 @@ Each SVG uses the font's own name as its preview text.
 ... etc
 ```
 
-#### PNG previews of each font
+> [!NOTE]
+> SVG previews are currently unused.
 
-To run:
+#### Families to skip
 
-```
-bun run generate-avif
-```
+If any font family is problematic or doesn't generate an English preview, add it to `src/families-to-skip.ts`.
 
-Output:
-
-```
-/output/png/abeezee.svg
-/output/png/abhaya-libre.svg
-...etc
-```
-
-#### AVIF previews of each font
-
-To run:
-
-```
-rustup update
-cargo install cavif
-
-bun run generate-avif
-```
-
-Output:
-
-```
-/output/avif/abeezee.svg
-/output/avif/abhaya-libre.svg
-...etc
-```
 
 #### Packing
 
-For performance reasons, instead of loading individual PNG files or one huge PNG/AVIF file at runtime, we combine font preview images and split them into chunks.
+For performance reasons, instead of loading individual font previews or one huge font preview bundle image at runtime, we combine font previews and split them into chunks.
 
-Once you have individual `/output/png/` files and `/output/generated-font-data.json`, you can run `bun packing` to generate:
+Once you have individual `/output/png/` files and `/output/metadata.json`, you can run `bun packing` to generate in `/output/font-chunks/`:
 
-- 33 chunks containing 50 font previews each, in `/output/chunks/`
-- `/output/fonts.json` which contains metadata about fonts and the chunks
+- 35+ chunks containing 50 font previews each
+- `fonts.json` which contains metadata about fonts and the chunks
 
 These are the only files you need to create the font picker.
 
-⚠️ Important: If some fonts of `generated-font-data.json` do not have a matching PNG file, they will be excluded from the chunks. A warning will be shown during `bun packing`.
-
-#### Demo
+### Demo
 
 To see a font picker demo with the fonts you just packed:
-- Copy `/output/chunks/` and `/output/font.json` into `/example/fonts/`
-- If the number of chunks has changed, update imports in `pages/index.tsx` and the `chunks` variable.
+- Copy the content of `/output/font-chunks/`  into `/example/public/v1/`
 - In `/example`, run: `bun i` and `bun dev`
 
-### Instructions
+### Versioning
 
-Make sure to add a Google Fonts API key in a .env file as `GOOGLE_FONTS_API_KEY`. You can get one for free here: https://developers.google.com/fonts/docs/developer_api
-
-We commit the output directory because we only generate new SVGs if they're not yet generated. `generated-font-data.json` will be regenerated each time.
-
-```bash
-# install deps
-bun install
-
-# run
-bun run generate
-# check output folder
-```
+To avoid browser caching issues when generating new chunks for production, put the new chunks in a new `public` folder, such as `/public/font-chunks/v2/*` and update the path in the code.
 
 ### Prior art
 
