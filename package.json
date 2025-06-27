@@ -7,7 +7,8 @@
   "license": "MIT",
   "scripts": {
     "generate-svg": "bun run src/generate-svg.ts",
-    "generate-png-and-avif": "bun run src/generate-png-and-avif.ts"
+    "generate-png-and-avif": "bun run src/generate-png-and-avif.ts",
+    "packing": "bun run src/packing.ts"
   },
   "devDependencies": {
     "@types/bun": "latest",
@@ -20,6 +21,7 @@
     "makerjs": "^0.18.1",
     "opentype.js": "^1.3.4",
     "playwright": "^1.48.2",
+    "potpack": "2.0.0",
     "sharp": "^0.33.5",
     "svgo": "^3.3.2",
     "wrangler": "^3.83.0"

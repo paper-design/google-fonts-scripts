@@ -62,6 +62,26 @@ Output:
 ...etc
 ```
 
+#### Packing
+
+For performance reasons, instead of loading individual PNG files or one huge PNG/AVIF file at runtime, we combine font preview images and split them into chunks.
+
+Once you have individual `/output/png/` files and `/output/generated-font-data.json`, you can run `bun packing` to generate:
+
+- 33 chunks containing 50 font previews each, in `/output/chunks/`
+- `/output/fonts.json` which contains metadata about fonts and the chunks
+
+These are the only files you need to create the font picker.
+
+⚠️ Important: If some fonts of `generated-font-data.json` do not have a matching PNG file, they will be excluded from the chunks. A warning will be shown during `bun packing`.
+
+#### Demo
+
+To see a font picker demo with the fonts you just packed:
+- Copy `/output/chunks/` and `/output/font.json` into `/example/fonts/`
+- If the number of chunks has changed, update imports in `pages/index.tsx` and the `chunks` variable.
+- In `/example`, run: `bun i` and `bun dev`
+
 ### Instructions
 
 Make sure to add a Google Fonts API key in a .env file as `GOOGLE_FONTS_API_KEY`. You can get one for free here: https://developers.google.com/fonts/docs/developer_api
