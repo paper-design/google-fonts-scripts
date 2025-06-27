@@ -47,7 +47,7 @@ bun all
 
 #### SVG previews
 
-`bun png` generates SVG files:
+`bun svg` generates SVG files:
 
 ```
 /output/svg/abeezee.svg
