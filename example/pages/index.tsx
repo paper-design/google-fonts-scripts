@@ -1,13 +1,24 @@
 import { useEffect, useRef, useState } from 'react';
 
 type Font = {
-  n: string;
-  ch: number;
+  name: string;
+  chunk: number;
   x: number;
   y: number;
-  w: number;
-  f: string[];
+  width: number;
+  styles: string[];
   noPreview?: boolean;
+};
+
+type AllFonts = {
+  [fontName: string]: {
+    ch: number;
+    x: number;
+    y: number;
+    w: number;
+    s: string[];
+    noPreview?: boolean;
+  };
 };
 
 type ChunkInfo = {
@@ -45,17 +56,17 @@ const FontPreview = ({ font, chunkInfo }: { font: Font; chunkInfo: Record<number
         className="text-sm text-gray-700 truncate pr-2"
         style={{ height: `${FONT_PREVIEW_HEIGHT}px`, lineHeight: `${FONT_PREVIEW_HEIGHT}px` }}
       >
-        {font.n}
+        {font.name}
       </div>
     );
   }
 
-  const chunkData = chunkInfo[font.ch];
-  const chunkUrl = `/font-chunks/v1/font-chunk-${font.ch}.avif`;
+  const chunkData = chunkInfo[font.chunk];
+  const chunkUrl = `/font-chunks/v1/font-chunk-${font.chunk}.avif`;
 
   if (!chunkData) return null;
 
-  const width = Math.round((font.w / FONT_HEIGHT_IN_CHUNK) * FONT_PREVIEW_HEIGHT);
+  const width = Math.round((font.width / FONT_HEIGHT_IN_CHUNK) * FONT_PREVIEW_HEIGHT);
 
   return (
     <div
@@ -75,7 +86,7 @@ const FontContainer = ({ font, chunkInfo }: { font: Font; chunkInfo: Record<numb
   const { ref, isVisible } = useIntersectionObserver();
 
   const handleClick = () => {
-    alert(`Font: ${font.n}\nWeights: ${font.f.join(', ')}`);
+    alert(`Font: ${font.name}\nWeights: ${font.styles.join(', ')}`);
   };
 
   return (
@@ -100,22 +111,33 @@ const FontBundleViewer = () => {
         if (!response.ok) {
           throw new Error(`Failed to fetch fonts.json: ${response.statusText}`);
         }
-        const data: Font[] = await response.json();
-        setFontBundle(data);
+        const data: AllFonts = await response.json();
+
+        // Convert object to array and add font names
+        const fontArray: Font[] = Object.entries(data).map(([fontName, fontData]) => ({
+          name: fontName,
+          chunk: fontData.ch,
+          x: fontData.x,
+          y: fontData.y,
+          width: fontData.w,
+          styles: fontData.s,
+        }));
+
+        setFontBundle(fontArray);
 
         // Calculate chunk dimensions
         const chunkInfoData: Record<number, ChunkInfo> = {};
 
-        data.forEach((font) => {
-          if (!chunkInfoData[font.ch]) {
-            chunkInfoData[font.ch] = { maxWidth: 0, maxHeight: 0 };
+        fontArray.forEach((font) => {
+          if (!chunkInfoData[font.chunk]) {
+            chunkInfoData[font.chunk] = { maxWidth: 0, maxHeight: 0 };
           }
 
-          const rightEdge = font.x + font.w;
+          const rightEdge = font.x + font.width;
           const bottomEdge = font.y + FONT_HEIGHT_IN_CHUNK;
 
-          chunkInfoData[font.ch].maxWidth = Math.max(chunkInfoData[font.ch].maxWidth, rightEdge);
-          chunkInfoData[font.ch].maxHeight = Math.max(chunkInfoData[font.ch].maxHeight, bottomEdge);
+          chunkInfoData[font.chunk].maxWidth = Math.max(chunkInfoData[font.chunk].maxWidth, rightEdge);
+          chunkInfoData[font.chunk].maxHeight = Math.max(chunkInfoData[font.chunk].maxHeight, bottomEdge);
         });
 
         setChunkInfo(chunkInfoData);
@@ -133,7 +155,7 @@ const FontBundleViewer = () => {
     if (fontBundle.length === 0) return;
 
     // Get unique chunk numbers and preload images
-    const uniqueChunks = Array.from(new Set(fontBundle.map((font) => font.ch)));
+    const uniqueChunks = Array.from(new Set(fontBundle.map((font) => font.chunk)));
     const preloadImages = uniqueChunks.map((chunkNum) => {
       return new Promise<void>((resolve, reject) => {
         const img = new Image();

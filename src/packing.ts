@@ -16,18 +16,17 @@ type FontBox = {
   y?: number;
   fontName: string;
   fileName: string;
-  weights: string[];
+  styles: string[];
   buffer?: Buffer;
   noPreview?: boolean;
 };
 
 type FontMetadata = {
-  n: string;
   x: number;
   y: number;
   w: number;
   ch: number;
-  f: string[];
+  s: string[];
   noPreview?: boolean;
 };
 
@@ -56,7 +55,7 @@ const createFontChunks = async () => {
   const pngDir = join(process.cwd(), 'output', 'png');
   let missingFiles = 0;
 
-  for (const [fontName, weights] of fontEntries) {
+  for (const [fontName, styles] of fontEntries) {
     // Convert font name to filename (kebab-case)
     const fileName = fontName.toLowerCase().replace(/\s+/g, '-');
     const filePath = join(pngDir, `${fileName}.png`);
@@ -68,7 +67,7 @@ const createFontChunks = async () => {
         h: 0,
         fontName,
         fileName,
-        weights: weights as string[],
+        styles: styles as string[],
         noPreview: true,
       });
       continue;
@@ -78,14 +77,13 @@ const createFontChunks = async () => {
     if (!existsSync(filePath)) {
       console.warn(`⚠️  PNG file missing for font "${fontName}" (expected: ${fileName}.png)`);
       missingFiles++;
-      
       // Add placeholder entry for missing PNG
       boxes.push({
         w: 0,
         h: 0,
         fontName,
         fileName,
-        weights: weights as string[],
+        styles: styles as string[],
         noPreview: true,
       });
       continue;
@@ -111,20 +109,20 @@ const createFontChunks = async () => {
           h: newHeight,
           fontName,
           fileName,
-          weights: weights as string[],
+          styles: styles as string[],
           buffer: resizedBuffer,
         });
       } else {
         console.warn(`⚠️  Could not read dimensions for "${fontName}" (${fileName}.png)`);
         missingFiles++;
-        
+
         // Add placeholder entry for invalid PNG
         boxes.push({
           w: 0,
           h: 0,
           fontName,
           fileName,
-          weights: weights as string[],
+          styles: styles as string[],
           noPreview: true,
         });
       }
@@ -133,14 +131,14 @@ const createFontChunks = async () => {
         `⚠️  Error processing ${fileName}.png for font "${fontName}": ${error instanceof Error ? error.message : error}`
       );
       missingFiles++;
-      
+
       // Add placeholder entry for errored PNG
       boxes.push({
         w: 0,
         h: 0,
         fontName,
         fileName,
-        weights: weights as string[],
+        styles: styles as string[],
         noPreview: true,
       });
     }
@@ -166,7 +164,7 @@ const createFontChunks = async () => {
   console.log(`📦 Split valid images into ${validChunks.length} chunks of ${FONTS_PER_CHUNK} fonts each`);
 
   const results = [];
-  const allFontMetadata: FontMetadata[] = [];
+  const allFontMetadata: { [fontName: string]: FontMetadata } = {};
 
   // Process each chunk of valid boxes
   for (let chunkIndex = 0; chunkIndex < validChunks.length; chunkIndex++) {
@@ -211,20 +209,16 @@ const createFontChunks = async () => {
 
     console.log(`🎉 Chunk ${chunkNumber} AVIF created: ${outputPath}`);
 
-    // Add metadata for this chunk to the global metadata array
-    const chunkMetadata: FontMetadata[] = chunk.map((box) => ({
-      n: box.fontName,
-      x: box.x!,
-      y: box.y!,
-      w: box.w,
-      ch: chunkNumber,
-      f: box.weights,
-    }));
-
-    // Sort chunk metadata alphabetically to ensure consistent ordering
-    chunkMetadata.sort((a, b) => a.n.localeCompare(b.n));
-
-    allFontMetadata.push(...chunkMetadata);
+    // Add metadata for this chunk to the global metadata object
+    chunk.forEach((box) => {
+      allFontMetadata[box.fontName] = {
+        x: box.x!,
+        y: box.y!,
+        w: box.w,
+        ch: chunkNumber,
+        s: box.styles,
+      };
+    });
 
     results.push({
       chunkNumber,
@@ -237,27 +231,28 @@ const createFontChunks = async () => {
   }
 
   // Add metadata for fonts with no preview
-  const noPreviewMetadata: FontMetadata[] = noPreviewBoxes.map((box) => ({
-    n: box.fontName,
-    x: 0,
-    y: 0,
-    w: 0,
-    ch: 0,
-    f: box.weights,
-    noPreview: true,
-  }));
-
-  allFontMetadata.push(...noPreviewMetadata);
+  noPreviewBoxes.forEach((box) => {
+    allFontMetadata[box.fontName] = {
+      x: 0,
+      y: 0,
+      w: 0,
+      ch: 0,
+      s: box.styles,
+      noPreview: true,
+    };
+  });
 
   // Write the single JSON file with all font metadata
   console.log('\n📝 Generating unified font metadata JSON...');
 
-  // Final sort to ensure perfect alphabetical order in the JSON
-  allFontMetadata.sort((a, b) => a.n.localeCompare(b.n));
+  // Create sorted object to ensure consistent ordering
+  const sortedFontNames = Object.keys(allFontMetadata).sort();
 
   // Format JSON with one font per line
-  const jsonLines = allFontMetadata.map((font) => JSON.stringify(font));
-  const compactJson = '[\n' + jsonLines.join(',\n') + '\n]';
+  const jsonLines = sortedFontNames.map(
+    (fontName) => `  ${JSON.stringify(fontName)}: ${JSON.stringify(allFontMetadata[fontName])}`
+  );
+  const compactJson = '{\n' + jsonLines.join(',\n') + '\n}';
 
   const jsonOutputPath = join(process.cwd(), 'output', 'font-chunks', 'fonts.json');
   await writeFile(jsonOutputPath, compactJson, 'utf8');
