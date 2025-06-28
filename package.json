@@ -6,9 +6,11 @@
   "author": "Stephen Haney",
   "license": "MIT",
   "scripts": {
-    "generate-svg": "bun run src/generate-svg.ts",
-    "generate-png-and-avif": "bun run src/generate-png-and-avif.ts",
-    "packing": "bun run src/packing.ts"
+    "metadata": "bun run src/generate-metadata.ts",
+    "png": "bun run src/generate-png.ts",
+    "svg": "bun run src/generate-svg.ts",
+    "packing": "bun run src/packing.ts",
+    "all": "bun run metadata && bun run png && bun run packing"
   },
   "devDependencies": {
     "@types/bun": "latest",
