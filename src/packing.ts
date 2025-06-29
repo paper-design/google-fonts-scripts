@@ -165,22 +165,25 @@ const createFontChunks = async () => {
 
   const results = [];
   const allFontMetadata: { [fontName: string]: FontMetadata } = {};
+  const chunks: { w: number; h: number }[] = [];
 
   // Process each chunk of valid boxes
   for (let chunkIndex = 0; chunkIndex < validChunks.length; chunkIndex++) {
     const chunk = validChunks[chunkIndex];
-    const chunkNumber = chunkIndex + 1;
 
-    console.log(`\n🎯 Processing chunk ${chunkNumber}/${validChunks.length} (${chunk.length} fonts)...`);
+    console.log(`\n🎯 Processing chunk ${chunkIndex}/${validChunks.length - 1} (${chunk.length} fonts)...`);
 
     // Use potpack to calculate optimal layout for this chunk
     const result = potpack(chunk);
 
-    console.log(`📐 Chunk ${chunkNumber} canvas dimensions: ${result.w} x ${result.h}`);
-    console.log(`📦 Chunk ${chunkNumber} fill ratio: ${(result.fill * 100).toFixed(1)}%`);
+    console.log(`📐 Chunk ${chunkIndex} canvas dimensions: ${result.w} x ${result.h}`);
+    console.log(`📦 Chunk ${chunkIndex} fill ratio: ${(result.fill * 100).toFixed(1)}%`);
+
+    // Store chunk dimensions
+    chunks.push({ w: result.w, h: result.h });
 
     // Create the composite image for this chunk
-    console.log(`🎨 Creating chunk ${chunkNumber} AVIF image...`);
+    console.log(`🎨 Creating chunk ${chunkIndex} AVIF image...`);
 
     // Create a transparent background canvas
     const canvas = sharp({
@@ -200,14 +203,14 @@ const createFontChunks = async () => {
     }));
 
     // Create optimized image format composite for this chunk
-    const outputPath = join(process.cwd(), 'output', 'font-chunks', `font-chunk-${chunkNumber}.avif`);
+    const outputPath = join(process.cwd(), 'output', 'font-chunks', `font-chunk-${chunkIndex}.avif`);
     await canvas
       .composite(compositeOps)
       .avif({ quality: 70 })
       // .webp({ quality: 50, nearLossless: true })
       .toFile(outputPath);
 
-    console.log(`🎉 Chunk ${chunkNumber} AVIF created: ${outputPath}`);
+    console.log(`🎉 Chunk ${chunkIndex} AVIF created: ${outputPath}`);
 
     // Add metadata for this chunk to the global metadata object
     chunk.forEach((box) => {
@@ -215,13 +218,13 @@ const createFontChunks = async () => {
         x: box.x!,
         y: box.y!,
         w: box.w,
-        ch: chunkNumber,
+        ch: chunkIndex,
         s: box.styles,
       };
     });
 
     results.push({
-      chunkNumber,
+      chunkNumber: chunkIndex,
       width: result.w,
       height: result.h,
       totalImages: chunk.length,
@@ -248,14 +251,24 @@ const createFontChunks = async () => {
   // Create sorted object to ensure consistent ordering
   const sortedFontNames = Object.keys(allFontMetadata).sort();
 
-  // Format JSON with one font per line
-  const jsonLines = sortedFontNames.map(
-    (fontName) => `  ${JSON.stringify(fontName)}: ${JSON.stringify(allFontMetadata[fontName])}`
+  // Format JSON with one font per line for the fonts object
+  const fontJsonLines = sortedFontNames.map(
+    (fontName) => `    ${JSON.stringify(fontName)}: ${JSON.stringify(allFontMetadata[fontName])}`
   );
-  const compactJson = '{\n' + jsonLines.join(',\n') + '\n}';
+  const fontsJson = '{\n' + fontJsonLines.join(',\n') + '\n  }';
+
+  // Format chunks with one chunk per line
+  const chunkJsonLines = chunks.map((chunk) => `    ${JSON.stringify(chunk)}`);
+  const chunksJson = '[\n' + chunkJsonLines.join(',\n') + '\n  ]';
+
+  // Format the complete structure
+  const completeJson = `{
+  "fonts": ${fontsJson},
+  "chunks": ${chunksJson}
+}`;
 
   const jsonOutputPath = join(process.cwd(), 'output', 'font-chunks', 'fonts.json');
-  await writeFile(jsonOutputPath, compactJson, 'utf8');
+  await writeFile(jsonOutputPath, completeJson, 'utf8');
 
   console.log(`📄 Unified font metadata JSON created: ${jsonOutputPath}`);
   console.log(`✨ All ${validChunks.length} chunks created successfully!`);

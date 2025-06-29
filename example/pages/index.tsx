@@ -11,19 +11,17 @@ type Font = {
 };
 
 type AllFonts = {
-  [fontName: string]: {
-    ch: number;
-    x: number;
-    y: number;
-    w: number;
-    s: string[];
-    noPreview?: boolean;
+  fonts: {
+    [fontName: string]: {
+      ch: number;
+      x: number;
+      y: number;
+      w: number;
+      s: string[];
+      noPreview?: boolean;
+    };
   };
-};
-
-type ChunkInfo = {
-  maxWidth: number;
-  maxHeight: number;
+  chunks: { w: number; h: number }[];
 };
 
 const FONT_HEIGHT_IN_CHUNK = 32;
@@ -49,7 +47,7 @@ const useIntersectionObserver = () => {
   return { ref, isVisible };
 };
 
-const FontPreview = ({ font, chunkInfo }: { font: Font; chunkInfo: Record<number, ChunkInfo> }) => {
+const FontPreview = ({ font, chunks }: { font: Font; chunks: { w: number; h: number }[] }) => {
   if (font.noPreview) {
     return (
       <div
@@ -61,10 +59,10 @@ const FontPreview = ({ font, chunkInfo }: { font: Font; chunkInfo: Record<number
     );
   }
 
-  const chunkData = chunkInfo[font.chunk];
+  const chunk = chunks[font.chunk];
   const chunkUrl = `/font-chunks/v1/font-chunk-${font.chunk}.avif`;
 
-  if (!chunkData) return null;
+  if (!chunk) return null;
 
   const width = Math.round((font.width / FONT_HEIGHT_IN_CHUNK) * FONT_PREVIEW_HEIGHT);
 
@@ -75,14 +73,14 @@ const FontPreview = ({ font, chunkInfo }: { font: Font; chunkInfo: Record<number
         width: `${width}px`,
         height: `${FONT_PREVIEW_HEIGHT}px`,
         backgroundImage: `url(${chunkUrl})`,
-        backgroundSize: `${chunkData.maxWidth * SCALE}px ${chunkData.maxHeight * SCALE}px`,
+        backgroundSize: `${chunk.w * SCALE}px ${chunk.h * SCALE}px`,
         backgroundPosition: `-${font.x * SCALE}px -${font.y * SCALE}px`,
       }}
     />
   );
 };
 
-const FontContainer = ({ font, chunkInfo }: { font: Font; chunkInfo: Record<number, ChunkInfo> }) => {
+const FontContainer = ({ font, chunks }: { font: Font; chunks: { w: number; h: number }[] }) => {
   const { ref, isVisible } = useIntersectionObserver();
 
   const handleClick = () => {
@@ -91,14 +89,14 @@ const FontContainer = ({ font, chunkInfo }: { font: Font; chunkInfo: Record<numb
 
   return (
     <div ref={ref} className="w-[289px] h-9 flex items-center pl-2.5 hover:bg-gray-300" onClick={handleClick}>
-      {isVisible && <FontPreview font={font} chunkInfo={chunkInfo} />}
+      {isVisible && <FontPreview font={font} chunks={chunks} />}
     </div>
   );
 };
 
 const FontBundleViewer = () => {
   const [fontBundle, setFontBundle] = useState<Font[]>([]);
-  const [chunkInfo, setChunkInfo] = useState<Record<number, ChunkInfo>>({});
+  const [chunks, setChunks] = useState<{ w: number; h: number }[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -114,33 +112,18 @@ const FontBundleViewer = () => {
         const data: AllFonts = await response.json();
 
         // Convert object to array and add font names
-        const fontArray: Font[] = Object.entries(data).map(([fontName, fontData]) => ({
+        const fontArray: Font[] = Object.entries(data.fonts).map(([fontName, fontData]) => ({
           name: fontName,
           chunk: fontData.ch,
           x: fontData.x,
           y: fontData.y,
           width: fontData.w,
           styles: fontData.s,
+          noPreview: fontData.noPreview,
         }));
 
         setFontBundle(fontArray);
-
-        // Calculate chunk dimensions
-        const chunkInfoData: Record<number, ChunkInfo> = {};
-
-        fontArray.forEach((font) => {
-          if (!chunkInfoData[font.chunk]) {
-            chunkInfoData[font.chunk] = { maxWidth: 0, maxHeight: 0 };
-          }
-
-          const rightEdge = font.x + font.width;
-          const bottomEdge = font.y + FONT_HEIGHT_IN_CHUNK;
-
-          chunkInfoData[font.chunk].maxWidth = Math.max(chunkInfoData[font.chunk].maxWidth, rightEdge);
-          chunkInfoData[font.chunk].maxHeight = Math.max(chunkInfoData[font.chunk].maxHeight, bottomEdge);
-        });
-
-        setChunkInfo(chunkInfoData);
+        setChunks(data.chunks);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Unknown error occurred');
       } finally {
@@ -191,7 +174,7 @@ const FontBundleViewer = () => {
       >
         <div className="flex flex-col">
           {fontBundle.map((font, index) => (
-            <FontContainer key={index} font={font} chunkInfo={chunkInfo} />
+            <FontContainer key={index} font={font} chunks={chunks} />
           ))}
         </div>
       </div>
