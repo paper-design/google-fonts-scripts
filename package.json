@@ -6,6 +6,7 @@
   "author": "Stephen Haney",
   "license": "MIT",
   "scripts": {
+    "typegen": "TYPEGEN=true bun ./src/generate-types.ts",
     "metadata": "bun run src/generate-metadata.ts",
     "png": "bun run src/generate-png.ts",
     "svg": "bun run src/generate-svg.ts",
@@ -26,6 +27,7 @@
     "potpack": "2.0.0",
     "sharp": "^0.33.5",
     "svgo": "^3.3.2",
-    "wrangler": "^3.83.0"
+    "wrangler": "^3.83.0",
+    "quicktype-core": "^23.2.6"
   }
 }
