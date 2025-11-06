@@ -6,6 +6,7 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 import sharp from 'sharp';
 import { FAMILIES_TO_SKIP_PREVIEW_IMAGE } from './families-to-skip';
+import { OUTPUT_DIR } from './generate-metadata';
 
 class FontPreviewGenerator {
   pngOutputDir: string;
@@ -218,7 +219,7 @@ async function main() {
   console.log(`Filtered out ${allFontFamilies.length - fontFamilies.length} fonts from skip list`);
 
   // Skip if PNG files already exist in output directory
-  const outputDir = 'output/';
+  const outputDir = `${OUTPUT_DIR}/`;
   const pngOutputDir = path.join(outputDir, 'png');
   // Create PNG directory if it doesn't exist
   await fs.mkdir(pngOutputDir, { recursive: true });

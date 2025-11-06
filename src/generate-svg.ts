@@ -4,8 +4,8 @@ import { optimize } from 'svgo';
 import { fetchGoogleFonts } from './fetch-google-fonts';
 import { findClosestVariantToNormalWeight } from './find-closest-variant-to-normal-weight';
 import { FAMILIES_TO_SKIP_PREVIEW_IMAGE } from './families-to-skip';
+import { OUTPUT_DIR } from './generate-metadata';
 
-export const OUTPUT_DIR = './output';
 export const SVG_TARGET_DIR = `${OUTPUT_DIR}/svg`;
 
 async function main() {

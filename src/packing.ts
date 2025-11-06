@@ -5,6 +5,7 @@ import { join } from 'path';
 import { writeFile, mkdir } from 'fs/promises';
 import { existsSync } from 'fs';
 import { FAMILIES_TO_SKIP_PREVIEW_IMAGE } from './families-to-skip';
+import { OUTPUT_DIR } from './generate-metadata';
 
 const FONTS_PER_CHUNK = 100;
 const DESIRED_HEIGHT = 32; // 16px-tall container in Paper, x2 for high DPI screens
@@ -34,7 +35,7 @@ const createFontChunks = async () => {
   console.log('📂 Reading font data from metadata.json...');
 
   // Read the generated font data
-  const fontDataPath = join(process.cwd(), 'output', 'metadata.json');
+  const fontDataPath = join(process.cwd(), OUTPUT_DIR, 'metadata.json');
   const fontDataContent = await readFile(fontDataPath, 'utf8');
   const fontData = JSON.parse(fontDataContent);
 
@@ -44,7 +45,7 @@ const createFontChunks = async () => {
   console.log(`📊 Found ${fontEntries.length} fonts in font data`);
 
   // Ensure chunks directory exists
-  const chunksDir = join(process.cwd(), 'output', 'font-chunks');
+  const chunksDir = join(process.cwd(), OUTPUT_DIR, 'font-chunks');
   if (!existsSync(chunksDir)) {
     await mkdir(chunksDir, { recursive: true });
     console.log('📁 Created chunks directory');
@@ -52,7 +53,7 @@ const createFontChunks = async () => {
 
   // Read dimensions and buffer for each font
   const boxes: FontBox[] = [];
-  const pngDir = join(process.cwd(), 'output', 'png');
+  const pngDir = join(process.cwd(), OUTPUT_DIR, 'png');
   let missingFiles = 0;
 
   for (const [fontName, styles] of fontEntries) {
@@ -203,7 +204,7 @@ const createFontChunks = async () => {
     }));
 
     // Create optimized image format composite for this chunk
-    const outputPath = join(process.cwd(), 'output', 'font-chunks', `font-chunk-${chunkIndex}.avif`);
+    const outputPath = join(process.cwd(), OUTPUT_DIR, 'font-chunks', `font-chunk-${chunkIndex}.avif`);
     await canvas
       .composite(compositeOps)
       .avif({ quality: 70 })
@@ -267,7 +268,7 @@ const createFontChunks = async () => {
   "chunks": ${chunksJson}
 }`;
 
-  const jsonOutputPath = join(process.cwd(), 'output', 'font-chunks', 'fonts.json');
+  const jsonOutputPath = join(process.cwd(), OUTPUT_DIR, 'font-chunks', 'fonts.json');
   await writeFile(jsonOutputPath, completeJson, 'utf8');
 
   console.log(`📄 Unified font metadata JSON created: ${jsonOutputPath}`);
