@@ -10,7 +10,7 @@ export const SVG_TARGET_DIR = `${OUTPUT_DIR}/svg`;
 
 async function main() {
   // ----- Grab the data from google ----- //
-  const data: google.fonts.WebfontFamily[] = await fetchGoogleFonts();
+  const { items: data } = await fetchGoogleFonts();
 
   // ----- Build out the typeface data ----- //
   const typefaces: Record<string, string[]> = {};
@@ -22,7 +22,7 @@ async function main() {
       console.warn(`Skipping typeface: ${typeface}`);
       continue;
     }
-    
+
     // Skip fonts that are in the skip list
     if (FAMILIES_TO_SKIP_PREVIEW_IMAGE.has(typeface.family)) {
       console.log(`Skipping ${typeface.family} - in skip list`);
@@ -38,7 +38,7 @@ async function main() {
     // Build the SVG to generate info
     // Pick the best variant, we just use the closest to 400
     const closestVariant = findClosestVariantToNormalWeight(typeface.variants);
-    familiesToGenerate.push([typeface.family, typeface.files[closestVariant]]);
+    familiesToGenerate.push([typeface.family, typeface.files[closestVariant]!]);
   }
 
   // ----- Generate the SVGs ----- //

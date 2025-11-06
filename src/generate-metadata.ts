@@ -4,7 +4,7 @@ export const OUTPUT_DIR = './output';
 export const METADATA_FILE = `${OUTPUT_DIR}/metadata.json`;
 
 async function main() {
-  const data: google.fonts.WebfontFamily[] = await fetchGoogleFonts();
+  const { items: data } = await fetchGoogleFonts();
 
   const typefaces: Record<string, string[]> = {};
 
@@ -24,9 +24,7 @@ async function main() {
 
   // Format JSON with one font per line
   const fontEntries = Object.entries(typefaces).sort(([a], [b]) => a.localeCompare(b));
-  const jsonLines = fontEntries.map(([family, weights]) => 
-    `  ${JSON.stringify(family)}: ${JSON.stringify(weights)}`
-  );
+  const jsonLines = fontEntries.map(([family, weights]) => `  ${JSON.stringify(family)}: ${JSON.stringify(weights)}`);
   const formattedJson = '{\n' + jsonLines.join(',\n') + '\n}';
 
   await Bun.write(METADATA_FILE, formattedJson);

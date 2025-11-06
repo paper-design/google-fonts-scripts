@@ -209,12 +209,12 @@ class FontPreviewGenerator {
 async function main() {
   // Get the list of all Google Font families
 
-  const googleFonts = await fetchGoogleFonts();
+  const { items: googleFonts } = await fetchGoogleFonts();
   const allFontFamilies = googleFonts.map((font) => font.family);
-  
+
   // Filter out fonts that should be skipped
-  const fontFamilies = allFontFamilies.filter(family => !FAMILIES_TO_SKIP_PREVIEW_IMAGE.has(family));
-  
+  const fontFamilies = allFontFamilies.filter((family) => !FAMILIES_TO_SKIP_PREVIEW_IMAGE.has(family));
+
   console.log(`Filtered out ${allFontFamilies.length - fontFamilies.length} fonts from skip list`);
 
   // Skip if PNG files already exist in output directory
