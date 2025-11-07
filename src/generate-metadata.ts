@@ -65,7 +65,7 @@ function format(value: object) {
   // Format JSON with one font per line
   const fontEntries = Object.entries(value).sort(([a], [b]) => a.localeCompare(b));
   const jsonLines = fontEntries.map(([key, value]) => `  ${JSON.stringify(key)}: ${JSON.stringify(value)}`);
-  const formattedJson = '{\n' + jsonLines.join(',\n') + '\n}';
+  const formattedJson = '{\n' + jsonLines.join(',\n') + '\n}\n';
   return formattedJson;
 }
 
