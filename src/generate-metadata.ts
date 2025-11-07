@@ -1,4 +1,4 @@
-import type { FamilyMetadataList, Item } from '../__generated__/google-fonts';
+import type { Item } from '../__generated__/google-fonts';
 import { fetchGoogleFonts, fetchGoogleFontsMeta, fetchGoogleFontsVariable } from './fetch-google-fonts';
 
 export const OUTPUT_DIR = './__generated__';
@@ -76,4 +76,5 @@ async function main() {
   await Bun.write(`${OUTPUT_DIR}/metadata.json`, format(fonts));
   await Bun.write(`${OUTPUT_DIR}/axis.json`, format(fontsMeta));
 }
+
 main();
