@@ -1,8 +1,8 @@
-import { type GoogleFonts, type GoogleFontsMeta, Convert } from '../__generated__/google-fonts';
+import { type GoogleFontsVariable, type GoogleFontsMeta, Convert } from '../__generated__/google-fonts';
 
 const IGNORE_CONVERTING_RESPONSE = process.env.TYPEGEN;
 
-export async function fetchGoogleFonts(): Promise<GoogleFonts> {
+export async function fetchGoogleFonts(): Promise<GoogleFontsVariable> {
   const response = await fetch(
     `https://www.googleapis.com/webfonts/v1/webfonts?key=${process.env.GOOGLE_FONTS_API_KEY}`
   );
@@ -11,7 +11,20 @@ export async function fetchGoogleFonts(): Promise<GoogleFonts> {
     const data = await response.json();
     return data;
   } else {
-    return Convert.toGoogleFonts(await response.text());
+    return Convert.toGoogleFontsVariable(await response.text());
+  }
+}
+
+export async function fetchGoogleFontsVariable(): Promise<GoogleFontsVariable> {
+  const response = await fetch(
+    `https://www.googleapis.com/webfonts/v1/webfonts?key=${process.env.GOOGLE_FONTS_API_KEY}&capability=VF`
+  );
+
+  if (IGNORE_CONVERTING_RESPONSE) {
+    const data = await response.json();
+    return data;
+  } else {
+    return Convert.toGoogleFontsVariable(await response.text());
   }
 }
 

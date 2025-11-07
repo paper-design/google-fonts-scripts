@@ -1,14 +1,14 @@
 // To parse this data:
 //
-//   import { Convert, GoogleFonts, GoogleFontsMeta } from "./file";
+//   import { Convert, GoogleFontsVariable, GoogleFontsMeta } from "./file";
 //
-//   const googleFonts = Convert.toGoogleFonts(json);
+//   const googleFontsVariable = Convert.toGoogleFontsVariable(json);
 //   const googleFontsMeta = Convert.toGoogleFontsMeta(json);
 //
 // These functions will throw an error if the JSON doesn't
 // match the expected interface, even if the JSON is valid.
 
-export interface GoogleFonts {
+export interface GoogleFontsVariable {
     kind:  string;
     items: Item[];
 }
@@ -23,7 +23,14 @@ export interface Item {
     category:           ItemCategory;
     kind:               Kind;
     menu:               string;
+    axes?:              ItemAxe[];
     colorCapabilities?: ItemColorCapability[];
+}
+
+export interface ItemAxe {
+    tag:   string;
+    start: number;
+    end:   number;
 }
 
 export enum ItemCategory {
@@ -47,18 +54,18 @@ export interface Files {
     "600"?:       string;
     "700"?:       string;
     "800"?:       string;
-    "100"?:       string;
-    "200"?:       string;
-    "300"?:       string;
     "900"?:       string;
-    "100italic"?: string;
-    "200italic"?: string;
-    "300italic"?: string;
     "500italic"?: string;
-    "600italic"?: string;
     "700italic"?: string;
     "800italic"?: string;
     "900italic"?: string;
+    "100"?:       string;
+    "300"?:       string;
+    "100italic"?: string;
+    "300italic"?: string;
+    "200"?:       string;
+    "200italic"?: string;
+    "600italic"?: string;
 }
 
 export enum Kind {
@@ -105,7 +112,7 @@ export interface FamilyMetadataList {
     size:              number;
     subsets:           string[];
     fonts:             { [key: string]: Font };
-    axes:              Axe[];
+    axes:              FamilyMetadataListAxe[];
     designers:         string[];
     lastModified:      Date;
     dateAdded:         Date;
@@ -122,7 +129,7 @@ export interface FamilyMetadataList {
     languages:         any[];
 }
 
-export interface Axe {
+export interface FamilyMetadataListAxe {
     tag:          string;
     min:          number;
     max:          number;
@@ -187,12 +194,12 @@ export enum Stroke {
 // Converts JSON strings to/from your types
 // and asserts the results of JSON.parse at runtime
 export class Convert {
-    public static toGoogleFonts(json: string): GoogleFonts {
-        return cast(JSON.parse(json), r("GoogleFonts"));
+    public static toGoogleFontsVariable(json: string): GoogleFontsVariable {
+        return cast(JSON.parse(json), r("GoogleFontsVariable"));
     }
 
-    public static googleFontsToJson(value: GoogleFonts): string {
-        return JSON.stringify(uncast(value, r("GoogleFonts")), null, 2);
+    public static googleFontsVariableToJson(value: GoogleFontsVariable): string {
+        return JSON.stringify(uncast(value, r("GoogleFontsVariable")), null, 2);
     }
 
     public static toGoogleFontsMeta(json: string): GoogleFontsMeta {
@@ -357,7 +364,7 @@ function r(name: string) {
 }
 
 const typeMap: any = {
-    "GoogleFonts": o([
+    "GoogleFontsVariable": o([
         { json: "kind", js: "kind", typ: "" },
         { json: "items", js: "items", typ: a(r("Item")) },
     ], false),
@@ -371,7 +378,13 @@ const typeMap: any = {
         { json: "category", js: "category", typ: r("ItemCategory") },
         { json: "kind", js: "kind", typ: r("Kind") },
         { json: "menu", js: "menu", typ: "" },
+        { json: "axes", js: "axes", typ: u(undefined, a(r("ItemAxe"))) },
         { json: "colorCapabilities", js: "colorCapabilities", typ: u(undefined, a(r("ItemColorCapability"))) },
+    ], false),
+    "ItemAxe": o([
+        { json: "tag", js: "tag", typ: "" },
+        { json: "start", js: "start", typ: 3.14 },
+        { json: "end", js: "end", typ: 3.14 },
     ], false),
     "Files": o([
         { json: "regular", js: "regular", typ: u(undefined, "") },
@@ -380,18 +393,18 @@ const typeMap: any = {
         { json: "600", js: "600", typ: u(undefined, "") },
         { json: "700", js: "700", typ: u(undefined, "") },
         { json: "800", js: "800", typ: u(undefined, "") },
-        { json: "100", js: "100", typ: u(undefined, "") },
-        { json: "200", js: "200", typ: u(undefined, "") },
-        { json: "300", js: "300", typ: u(undefined, "") },
         { json: "900", js: "900", typ: u(undefined, "") },
-        { json: "100italic", js: "100italic", typ: u(undefined, "") },
-        { json: "200italic", js: "200italic", typ: u(undefined, "") },
-        { json: "300italic", js: "300italic", typ: u(undefined, "") },
         { json: "500italic", js: "500italic", typ: u(undefined, "") },
-        { json: "600italic", js: "600italic", typ: u(undefined, "") },
         { json: "700italic", js: "700italic", typ: u(undefined, "") },
         { json: "800italic", js: "800italic", typ: u(undefined, "") },
         { json: "900italic", js: "900italic", typ: u(undefined, "") },
+        { json: "100", js: "100", typ: u(undefined, "") },
+        { json: "300", js: "300", typ: u(undefined, "") },
+        { json: "100italic", js: "100italic", typ: u(undefined, "") },
+        { json: "300italic", js: "300italic", typ: u(undefined, "") },
+        { json: "200", js: "200", typ: u(undefined, "") },
+        { json: "200italic", js: "200italic", typ: u(undefined, "") },
+        { json: "600italic", js: "600italic", typ: u(undefined, "") },
     ], false),
     "GoogleFontsMeta": o([
         { json: "axisRegistry", js: "axisRegistry", typ: a(r("AxisRegistry")) },
@@ -424,7 +437,7 @@ const typeMap: any = {
         { json: "size", js: "size", typ: 0 },
         { json: "subsets", js: "subsets", typ: a("") },
         { json: "fonts", js: "fonts", typ: m(r("Font")) },
-        { json: "axes", js: "axes", typ: a(r("Axe")) },
+        { json: "axes", js: "axes", typ: a(r("FamilyMetadataListAxe")) },
         { json: "designers", js: "designers", typ: a("") },
         { json: "lastModified", js: "lastModified", typ: Date },
         { json: "dateAdded", js: "dateAdded", typ: Date },
@@ -440,7 +453,7 @@ const typeMap: any = {
         { json: "isBrandFont", js: "isBrandFont", typ: true },
         { json: "languages", js: "languages", typ: a("any") },
     ], false),
-    "Axe": o([
+    "FamilyMetadataListAxe": o([
         { json: "tag", js: "tag", typ: "" },
         { json: "min", js: "min", typ: 3.14 },
         { json: "max", js: "max", typ: 3.14 },

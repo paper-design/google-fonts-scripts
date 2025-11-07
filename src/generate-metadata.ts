@@ -1,16 +1,28 @@
-import { fetchGoogleFonts, fetchGoogleFontsMeta } from './fetch-google-fonts';
+import type { FamilyMetadataList, Item } from '../__generated__/google-fonts';
+import { fetchGoogleFonts, fetchGoogleFontsMeta, fetchGoogleFontsVariable } from './fetch-google-fonts';
 
 export const OUTPUT_DIR = './__generated__';
 
-interface MinAxis {
+interface AxisValue {
   name: string;
   values: [minValue: number, defaultValue: number, maxValue: number];
   precision: number;
 }
 
+interface FontValue {
+  variants: string[];
+  axes?: string[];
+}
+
 async function generateFonts() {
   const { items: data } = await fetchGoogleFonts();
-  const typefaces: Record<string, string[]> = {};
+  const fontsMeta = await fetchGoogleFontsVariable();
+
+  const typefaces: Record<string, FontValue> = {};
+  const variableFontMap: Record<string, Item> = fontsMeta.items.reduce((acc, value) => {
+    acc[value.family] = value;
+    return acc;
+  }, {} as Record<string, Item>);
 
   for (const typeface of data) {
     // Skip this one if we can't parse it
@@ -19,11 +31,16 @@ async function generateFonts() {
       continue;
     }
 
-    typefaces[typeface.family] = [];
+    const axes = variableFontMap[typeface.family].axes;
+
+    typefaces[typeface.family] = {
+      variants: [],
+      axes: axes ? axes.map((axis) => axis.tag) : undefined,
+    };
 
     for (const variant of typeface.variants) {
       const key = variant === 'regular' ? '400' : variant === 'italic' ? '400i' : variant.replace('italic', 'i');
-      typefaces[typeface.family].push(key);
+      typefaces[typeface.family].variants.push(key);
     }
   }
 
@@ -32,7 +49,7 @@ async function generateFonts() {
 
 async function generateAxis() {
   const fontsMeta = await fetchGoogleFontsMeta();
-  const registry: Record<string, MinAxis> = {};
+  const registry: Record<string, AxisValue> = {};
 
   for (const axis of fontsMeta.axisRegistry) {
     registry[axis.tag] = {

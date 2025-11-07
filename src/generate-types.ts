@@ -1,13 +1,13 @@
 import { quicktype, jsonInputForTargetLanguage, InputData } from 'quicktype-core';
-import { fetchGoogleFontsMeta, fetchGoogleFonts } from './fetch-google-fonts';
+import { fetchGoogleFontsMeta, fetchGoogleFontsVariable } from './fetch-google-fonts';
 
-const [fonts, metadata] = await Promise.all([fetchGoogleFonts(), fetchGoogleFontsMeta()]);
+const [fontsVariable, metadata] = await Promise.all([fetchGoogleFontsVariable(), fetchGoogleFontsMeta()]);
 
 const jsonInput = jsonInputForTargetLanguage('typescript');
 
 await jsonInput.addSource({
-  name: 'GoogleFonts',
-  samples: [JSON.stringify(fonts)],
+  name: 'GoogleFontsVariable',
+  samples: [JSON.stringify(fontsVariable)],
 });
 
 await jsonInput.addSource({
