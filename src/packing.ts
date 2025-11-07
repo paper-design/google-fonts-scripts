@@ -17,17 +17,44 @@ type FontBox = {
   y?: number;
   fontName: string;
   fileName: string;
-  styles: string[];
+  styles: {
+    variants: string[];
+    axes?: string[];
+  };
   buffer?: Buffer;
   noPreview?: boolean;
 };
 
 type FontMetadata = {
+  /**
+   * x position of the font preview in the chunk image
+   */
   x: number;
+  /**
+   * y position of the font preview in the chunk image
+   */
   y: number;
+  /**
+   * width of the font preview in the chunk image
+   */
   w: number;
+  /**
+   * chunk index where the font preview is located
+   */
   ch: number;
-  s: string[];
+  /**
+   * styles available for the font
+   */
+  s: {
+    /**
+     * variants available for the font
+     */
+    v: string[];
+    /**
+     * axes (tags) available for the font
+     */
+    a?: string[];
+  };
   noPreview?: boolean;
 };
 
@@ -68,7 +95,7 @@ const createFontChunks = async () => {
         h: 0,
         fontName,
         fileName,
-        styles: styles as string[],
+        styles: styles as FontBox['styles'],
         noPreview: true,
       });
       continue;
@@ -84,7 +111,7 @@ const createFontChunks = async () => {
         h: 0,
         fontName,
         fileName,
-        styles: styles as string[],
+        styles: styles as FontBox['styles'],
         noPreview: true,
       });
       continue;
@@ -110,7 +137,7 @@ const createFontChunks = async () => {
           h: newHeight,
           fontName,
           fileName,
-          styles: styles as string[],
+          styles: styles as FontBox['styles'],
           buffer: resizedBuffer,
         });
       } else {
@@ -123,7 +150,7 @@ const createFontChunks = async () => {
           h: 0,
           fontName,
           fileName,
-          styles: styles as string[],
+          styles: styles as FontBox['styles'],
           noPreview: true,
         });
       }
@@ -139,7 +166,7 @@ const createFontChunks = async () => {
         h: 0,
         fontName,
         fileName,
-        styles: styles as string[],
+        styles: styles as FontBox['styles'],
         noPreview: true,
       });
     }
@@ -220,7 +247,10 @@ const createFontChunks = async () => {
         y: box.y!,
         w: box.w,
         ch: chunkIndex,
-        s: box.styles,
+        s: {
+          v: box.styles.variants,
+          a: box.styles.axes,
+        },
       };
     });
 
@@ -241,7 +271,10 @@ const createFontChunks = async () => {
       y: 0,
       w: 0,
       ch: 0,
-      s: box.styles,
+      s: {
+        v: box.styles.variants,
+        a: box.styles.axes,
+      },
       noPreview: true,
     };
   });
