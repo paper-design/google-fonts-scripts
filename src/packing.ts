@@ -5,7 +5,7 @@ import { join } from 'path';
 import { writeFile, mkdir } from 'fs/promises';
 import { existsSync } from 'fs';
 import { FAMILIES_TO_SKIP_PREVIEW_IMAGE } from './families-to-skip';
-import { OUTPUT_DIR } from './generate-metadata';
+import { OUTPUT_DIR } from './vars';
 
 const FONTS_PER_CHUNK = 100;
 const DESIRED_HEIGHT = 32; // 16px-tall container in Paper, x2 for high DPI screens

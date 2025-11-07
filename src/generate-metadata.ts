@@ -1,7 +1,6 @@
-import type { Item } from '../__generated__/google-fonts';
+import type { Item } from '../output/google-fonts';
 import { fetchGoogleFonts, fetchGoogleFontsMeta, fetchGoogleFontsVariable } from './fetch-google-fonts';
-
-export const OUTPUT_DIR = './__generated__';
+import { OUTPUT_DIR } from './vars';
 
 interface AxisValue {
   name: string;

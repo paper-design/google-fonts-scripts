@@ -1,5 +1,6 @@
 import { quicktype, jsonInputForTargetLanguage, InputData } from 'quicktype-core';
 import { fetchGoogleFontsMeta, fetchGoogleFontsVariable } from './fetch-google-fonts';
+import { OUTPUT_DIR } from './vars';
 
 const [fontsVariable, metadata] = await Promise.all([fetchGoogleFontsVariable(), fetchGoogleFontsMeta()]);
 
@@ -23,4 +24,4 @@ const schema = await quicktype({
   lang: 'typescript',
 });
 
-await Bun.write('./__generated__/google-fonts.ts', schema.lines.join('\n'));
+await Bun.write(`./${OUTPUT_DIR}/google-fonts.ts`, schema.lines.join('\n'));

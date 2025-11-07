@@ -6,7 +6,7 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 import sharp from 'sharp';
 import { FAMILIES_TO_SKIP_PREVIEW_IMAGE } from './families-to-skip';
-import { OUTPUT_DIR } from './generate-metadata';
+import { OUTPUT_DIR } from './vars';
 
 class FontPreviewGenerator {
   pngOutputDir: string;

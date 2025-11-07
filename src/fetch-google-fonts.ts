@@ -1,4 +1,4 @@
-import { type GoogleFontsVariable, type GoogleFontsMeta, Convert } from '../__generated__/google-fonts';
+import { type GoogleFontsVariable, type GoogleFontsMeta, Convert } from '../output/google-fonts';
 
 const IGNORE_CONVERTING_RESPONSE = process.env.TYPEGEN;
 

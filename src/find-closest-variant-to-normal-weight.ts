@@ -1,4 +1,4 @@
-import type { Files } from '../__generated__/google-fonts';
+import type { Files } from '../output/google-fonts';
 
 type Variant = keyof Files;
 
