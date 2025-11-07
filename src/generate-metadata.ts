@@ -73,7 +73,7 @@ async function main() {
   const [fonts, fontsMeta] = await Promise.all([generateFonts(), generateAxis()]);
 
   await Bun.write(`${OUTPUT_DIR}/metadata.json`, format(fonts));
-  await Bun.write(`${OUTPUT_DIR}/axis.json`, format(fontsMeta));
+  await Bun.write(`${OUTPUT_DIR}/axes.json`, format(fontsMeta));
 }
 
 main();
