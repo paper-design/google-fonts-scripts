@@ -10,7 +10,7 @@ interface AxisValue {
 
 interface FontValue {
   variants: string[];
-  axes?: string[];
+  axes?: { min: number; max: number; tag: string }[];
 }
 
 async function generateFonts() {
@@ -30,11 +30,9 @@ async function generateFonts() {
       continue;
     }
 
-    const axes = variableFontMap[typeface.family].axes;
-
     typefaces[typeface.family] = {
       variants: [],
-      axes: axes ? axes.map((axis) => axis.tag) : undefined,
+      axes: variableFontMap[typeface.family].axes?.map((axis) => ({ tag: axis.tag, min: axis.start, max: axis.end })),
     };
 
     for (const variant of typeface.variants) {
