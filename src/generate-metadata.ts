@@ -2,12 +2,6 @@ import type { Item } from '../output/google-fonts';
 import { fetchGoogleFonts, fetchGoogleFontsMeta, fetchGoogleFontsVariable } from './fetch-google-fonts';
 import { OUTPUT_DIR } from './vars';
 
-interface AxisValue {
-  name: string;
-  values: [minValue: number, defaultValue: number, maxValue: number];
-  precision: number;
-}
-
 interface FontValue {
   variants: string[];
   axes?: { min: number; max: number; tag: string }[];
@@ -46,14 +40,10 @@ async function generateFonts() {
 
 async function generateAxis() {
   const fontsMeta = await fetchGoogleFontsMeta();
-  const registry: Record<string, AxisValue> = {};
+  const registry: Record<string, string> = {};
 
   for (const axis of fontsMeta.axisRegistry) {
-    registry[axis.tag] = {
-      name: axis.displayName,
-      precision: axis.precision,
-      values: [axis.min, axis.defaultValue, axis.max],
-    };
+    registry[axis.tag] = axis.displayName;
   }
 
   return registry;
