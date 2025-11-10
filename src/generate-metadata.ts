@@ -1,5 +1,6 @@
 import type { Item } from '../output/google-fonts';
 import { fetchGoogleFonts, fetchGoogleFontsMeta, fetchGoogleFontsVariable } from './fetch-google-fonts';
+import { sortAxes } from './sort';
 import { OUTPUT_DIR } from './vars';
 
 interface FontValue {
@@ -26,7 +27,9 @@ async function generateFonts() {
 
     typefaces[typeface.family] = {
       variants: [],
-      axes: variableFontMap[typeface.family].axes?.map((axis) => ({ tag: axis.tag, min: axis.start, max: axis.end })),
+      axes: variableFontMap[typeface.family].axes
+        ?.map((axis) => ({ tag: axis.tag, min: axis.start, max: axis.end }))
+        .sort((a, b) => sortAxes(a.tag, b.tag)),
     };
 
     for (const variant of typeface.variants) {
@@ -49,9 +52,9 @@ async function generateAxis() {
   return registry;
 }
 
-function format(value: object) {
+function format(value: object, sort: (a: string, b: string) => number = (a, b) => a.localeCompare(b)) {
   // Format JSON with one font per line
-  const fontEntries = Object.entries(value).sort(([a], [b]) => a.localeCompare(b));
+  const fontEntries = Object.entries(value).sort(([a], [b]) => sort(a, b));
   const jsonLines = fontEntries.map(([key, value]) => `  ${JSON.stringify(key)}: ${JSON.stringify(value)}`);
   const formattedJson = '{\n' + jsonLines.join(',\n') + '\n}\n';
   return formattedJson;
@@ -61,7 +64,7 @@ async function main() {
   const [fonts, fontsMeta] = await Promise.all([generateFonts(), generateAxis()]);
 
   await Bun.write(`${OUTPUT_DIR}/metadata.json`, format(fonts));
-  await Bun.write(`${OUTPUT_DIR}/axes.json`, format(fontsMeta));
+  await Bun.write(`${OUTPUT_DIR}/axes.json`, format(fontsMeta, sortAxes));
 }
 
 main();
