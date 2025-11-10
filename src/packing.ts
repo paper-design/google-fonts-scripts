@@ -6,6 +6,7 @@ import { writeFile, mkdir } from 'fs/promises';
 import { existsSync } from 'fs';
 import { FAMILIES_TO_SKIP_PREVIEW_IMAGE } from './families-to-skip';
 import { OUTPUT_DIR } from './vars';
+import type { FontValue } from './generate-metadata';
 
 const FONTS_PER_CHUNK = 100;
 const DESIRED_HEIGHT = 32; // 16px-tall container in Paper, x2 for high DPI screens
@@ -17,10 +18,8 @@ type FontBox = {
   y?: number;
   fontName: string;
   fileName: string;
-  styles: {
-    variants: string[];
-    axes?: string[];
-  };
+  variants: string[];
+  axes?: { min: number; max: number; tag: string; defaultValue: number }[];
   buffer?: Buffer;
   noPreview?: boolean;
 };
@@ -43,18 +42,16 @@ type FontMetadata = {
    */
   ch: number;
   /**
-   * styles available for the font
+   * variants available for the font
    */
-  s: {
-    /**
-     * variants available for the font
-     */
-    v: string[];
-    /**
-     * axes (tags) available for the font
-     */
-    a?: string[];
-  };
+  v: string[];
+  /**
+   * axes available for the font
+   */
+  a?: { min: number; max: number; tag: string; defaultValue: number }[];
+  /**
+   * indicates if the font has no preview image
+   */
   noPreview?: boolean;
 };
 
@@ -64,7 +61,7 @@ const createFontChunks = async () => {
   // Read the generated font data
   const fontDataPath = join(process.cwd(), OUTPUT_DIR, 'metadata.json');
   const fontDataContent = await readFile(fontDataPath, 'utf8');
-  const fontData = JSON.parse(fontDataContent);
+  const fontData: Record<string, FontValue> = JSON.parse(fontDataContent);
 
   // Create array of font entries and sort alphabetically
   const fontEntries = Object.entries(fontData).sort(([a], [b]) => a.localeCompare(b));
@@ -95,7 +92,8 @@ const createFontChunks = async () => {
         h: 0,
         fontName,
         fileName,
-        styles: styles as FontBox['styles'],
+        variants: styles.variants,
+        axes: styles.axes,
         noPreview: true,
       });
       continue;
@@ -111,7 +109,8 @@ const createFontChunks = async () => {
         h: 0,
         fontName,
         fileName,
-        styles: styles as FontBox['styles'],
+        variants: styles.variants,
+        axes: styles.axes,
         noPreview: true,
       });
       continue;
@@ -137,7 +136,8 @@ const createFontChunks = async () => {
           h: newHeight,
           fontName,
           fileName,
-          styles: styles as FontBox['styles'],
+          variants: styles.variants,
+          axes: styles.axes,
           buffer: resizedBuffer,
         });
       } else {
@@ -150,7 +150,8 @@ const createFontChunks = async () => {
           h: 0,
           fontName,
           fileName,
-          styles: styles as FontBox['styles'],
+          variants: styles.variants,
+          axes: styles.axes,
           noPreview: true,
         });
       }
@@ -166,7 +167,8 @@ const createFontChunks = async () => {
         h: 0,
         fontName,
         fileName,
-        styles: styles as FontBox['styles'],
+        variants: styles.variants,
+        axes: styles.axes,
         noPreview: true,
       });
     }
@@ -247,10 +249,8 @@ const createFontChunks = async () => {
         y: box.y!,
         w: box.w,
         ch: chunkIndex,
-        s: {
-          v: box.styles.variants,
-          a: box.styles.axes,
-        },
+        v: box.variants,
+        a: box.axes,
       };
     });
 
@@ -271,10 +271,8 @@ const createFontChunks = async () => {
       y: 0,
       w: 0,
       ch: 0,
-      s: {
-        v: box.styles.variants,
-        a: box.styles.axes,
-      },
+      v: box.variants,
+      a: box.axes,
       noPreview: true,
     };
   });

@@ -5,7 +5,7 @@ import { OUTPUT_DIR } from './vars';
 
 const logSink: string[] = [];
 
-interface FontValue {
+export interface FontValue {
   variants: string[];
   axes?: { min: number; max: number; tag: string; defaultValue: number }[];
 }
