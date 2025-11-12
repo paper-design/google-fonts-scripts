@@ -44,7 +44,7 @@ type FontMetadata = {
   /**
    * variants available for the font
    */
-  v: string[];
+  s: string[];
   /**
    * axes available for the font
    */
@@ -249,7 +249,7 @@ const createFontChunks = async () => {
         y: box.y!,
         w: box.w,
         ch: chunkIndex,
-        v: box.variants,
+        s: box.variants,
         a: box.axes,
       };
     });
@@ -271,7 +271,7 @@ const createFontChunks = async () => {
       y: 0,
       w: 0,
       ch: 0,
-      v: box.variants,
+      s: box.variants,
       a: box.axes,
       noPreview: true,
     };
