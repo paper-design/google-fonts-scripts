@@ -5,6 +5,8 @@ import { join } from 'path';
 import { writeFile, mkdir } from 'fs/promises';
 import { existsSync } from 'fs';
 import { FAMILIES_TO_SKIP_PREVIEW_IMAGE } from './families-to-skip';
+import { OUTPUT_DIR } from './vars';
+import type { FontValue } from './generate-metadata';
 
 const FONTS_PER_CHUNK = 100;
 const DESIRED_HEIGHT = 32; // 16px-tall container in Paper, x2 for high DPI screens
@@ -16,17 +18,40 @@ type FontBox = {
   y?: number;
   fontName: string;
   fileName: string;
-  styles: string[];
+  variants: string[];
+  axes?: { min: number; max: number; tag: string; defaultValue: number }[];
   buffer?: Buffer;
   noPreview?: boolean;
 };
 
 type FontMetadata = {
+  /**
+   * x position of the font preview in the chunk image
+   */
   x: number;
+  /**
+   * y position of the font preview in the chunk image
+   */
   y: number;
+  /**
+   * width of the font preview in the chunk image
+   */
   w: number;
+  /**
+   * chunk index where the font preview is located
+   */
   ch: number;
+  /**
+   * variants available for the font
+   */
   s: string[];
+  /**
+   * axes available for the font
+   */
+  a?: { min: number; max: number; tag: string; defaultValue: number }[];
+  /**
+   * indicates if the font has no preview image
+   */
   noPreview?: boolean;
 };
 
@@ -34,9 +59,9 @@ const createFontChunks = async () => {
   console.log('📂 Reading font data from metadata.json...');
 
   // Read the generated font data
-  const fontDataPath = join(process.cwd(), 'output', 'metadata.json');
+  const fontDataPath = join(process.cwd(), OUTPUT_DIR, 'metadata.json');
   const fontDataContent = await readFile(fontDataPath, 'utf8');
-  const fontData = JSON.parse(fontDataContent);
+  const fontData: Record<string, FontValue> = JSON.parse(fontDataContent);
 
   // Create array of font entries and sort alphabetically
   const fontEntries = Object.entries(fontData).sort(([a], [b]) => a.localeCompare(b));
@@ -44,7 +69,7 @@ const createFontChunks = async () => {
   console.log(`📊 Found ${fontEntries.length} fonts in font data`);
 
   // Ensure chunks directory exists
-  const chunksDir = join(process.cwd(), 'output', 'font-chunks');
+  const chunksDir = join(process.cwd(), OUTPUT_DIR, 'font-chunks');
   if (!existsSync(chunksDir)) {
     await mkdir(chunksDir, { recursive: true });
     console.log('📁 Created chunks directory');
@@ -52,7 +77,7 @@ const createFontChunks = async () => {
 
   // Read dimensions and buffer for each font
   const boxes: FontBox[] = [];
-  const pngDir = join(process.cwd(), 'output', 'png');
+  const pngDir = join(process.cwd(), OUTPUT_DIR, 'png');
   let missingFiles = 0;
 
   for (const [fontName, styles] of fontEntries) {
@@ -67,7 +92,8 @@ const createFontChunks = async () => {
         h: 0,
         fontName,
         fileName,
-        styles: styles as string[],
+        variants: styles.variants,
+        axes: styles.axes,
         noPreview: true,
       });
       continue;
@@ -83,7 +109,8 @@ const createFontChunks = async () => {
         h: 0,
         fontName,
         fileName,
-        styles: styles as string[],
+        variants: styles.variants,
+        axes: styles.axes,
         noPreview: true,
       });
       continue;
@@ -109,7 +136,8 @@ const createFontChunks = async () => {
           h: newHeight,
           fontName,
           fileName,
-          styles: styles as string[],
+          variants: styles.variants,
+          axes: styles.axes,
           buffer: resizedBuffer,
         });
       } else {
@@ -122,7 +150,8 @@ const createFontChunks = async () => {
           h: 0,
           fontName,
           fileName,
-          styles: styles as string[],
+          variants: styles.variants,
+          axes: styles.axes,
           noPreview: true,
         });
       }
@@ -138,7 +167,8 @@ const createFontChunks = async () => {
         h: 0,
         fontName,
         fileName,
-        styles: styles as string[],
+        variants: styles.variants,
+        axes: styles.axes,
         noPreview: true,
       });
     }
@@ -203,7 +233,7 @@ const createFontChunks = async () => {
     }));
 
     // Create optimized image format composite for this chunk
-    const outputPath = join(process.cwd(), 'output', 'font-chunks', `font-chunk-${chunkIndex}.avif`);
+    const outputPath = join(process.cwd(), OUTPUT_DIR, 'font-chunks', `font-chunk-${chunkIndex}.avif`);
     await canvas
       .composite(compositeOps)
       .avif({ quality: 70 })
@@ -219,7 +249,8 @@ const createFontChunks = async () => {
         y: box.y!,
         w: box.w,
         ch: chunkIndex,
-        s: box.styles,
+        s: box.variants,
+        a: box.axes,
       };
     });
 
@@ -240,7 +271,8 @@ const createFontChunks = async () => {
       y: 0,
       w: 0,
       ch: 0,
-      s: box.styles,
+      s: box.variants,
+      a: box.axes,
       noPreview: true,
     };
   });
@@ -267,7 +299,7 @@ const createFontChunks = async () => {
   "chunks": ${chunksJson}
 }`;
 
-  const jsonOutputPath = join(process.cwd(), 'output', 'font-chunks', 'fonts.json');
+  const jsonOutputPath = join(process.cwd(), OUTPUT_DIR, 'font-chunks', 'fonts.json');
   await writeFile(jsonOutputPath, completeJson, 'utf8');
 
   console.log(`📄 Unified font metadata JSON created: ${jsonOutputPath}`);
