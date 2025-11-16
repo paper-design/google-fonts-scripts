@@ -48,7 +48,7 @@ type FontMetadata = {
   /**
    * axes available for the font
    */
-  a?: { min: number; max: number; tag: string; defaultValue: number }[];
+  a?: Record<string, { min: number; max: number; defaultValue: number }>;
   /**
    * indicates if the font has no preview image
    */
@@ -250,7 +250,14 @@ const createFontChunks = async () => {
         w: box.w,
         ch: chunkIndex,
         s: box.variants,
-        a: box.axes,
+        a: box.axes?.reduce((acc, axis) => {
+          acc[axis.tag] = {
+            min: axis.min,
+            max: axis.max,
+            defaultValue: axis.defaultValue,
+          };
+          return acc;
+        }, {} as Exclude<FontMetadata['a'], undefined>),
       };
     });
 
@@ -272,7 +279,14 @@ const createFontChunks = async () => {
       w: 0,
       ch: 0,
       s: box.variants,
-      a: box.axes,
+      a: box.axes?.reduce((acc, axis) => {
+        acc[axis.tag] = {
+          min: axis.min,
+          max: axis.max,
+          defaultValue: axis.defaultValue,
+        };
+        return acc;
+      }, {} as Exclude<FontMetadata['a'], undefined>),
       noPreview: true,
     };
   });
