@@ -1,6 +1,6 @@
 // Common axes sorting order, used to display axes in a consistent manner
 // when generating labels for variable fonts and in the axes popover
-const AXES_SORT_ORDER = ['wdth', 'wght', 'ital', 'slnt', 'opsz'];
+const AXES_SORT_ORDER = ['wght', 'wdth', 'ital', 'slnt', 'opsz'];
 
 export function sortAxes(a: string, b: string) {
   const aIndex = AXES_SORT_ORDER.indexOf(a.toLowerCase());
