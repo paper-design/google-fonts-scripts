@@ -3,7 +3,6 @@
   "wdth": "Width",
   "ital": "Italic",
   "slnt": "Slant",
-  "opsz": "Optical Size",
   "ARRR": "AR Retinal Resolution",
   "BLED": "Bleed",
   "BNCE": "Bounce",
@@ -50,5 +49,6 @@
   "YTFI": "Figure Height",
   "YTLC": "Lowercase Height",
   "YTUC": "Uppercase Height",
-  "ZROT": "Rotation in Z"
+  "ZROT": "Rotation in Z",
+  "opsz": "Optical Size"
 }
