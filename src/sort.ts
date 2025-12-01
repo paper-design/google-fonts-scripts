@@ -3,6 +3,10 @@
 const AXES_SORT_ORDER = ['wght', 'wdth', 'ital', 'slnt', 'opsz'];
 
 export function sortAxes(a: string, b: string) {
+  // Always put opsz last
+  if (a === 'opsz') return 1;
+  if (b === 'opsz') return -1;
+
   const aIndex = AXES_SORT_ORDER.indexOf(a.toLowerCase());
   const bIndex = AXES_SORT_ORDER.indexOf(b.toLowerCase());
 
