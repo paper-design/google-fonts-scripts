@@ -1,4 +1,4 @@
-import type { AxisRegistry, FamilyMetadataList, FamilyMetadataListAxe, Item } from '../output/google-fonts';
+import type { AxisRegistry, FamilyMetadataList, FamilyMetadataListAxis, Item } from '../output/google-fonts';
 import { extractFeatures } from './extract-opentype-features';
 import { fetchGoogleFonts, fetchGoogleFontsMeta, fetchGoogleFontsVariable } from './fetch-google-fonts';
 import { findClosestVariantToNormalWeight } from './find-closest-variant-to-normal-weight';
@@ -53,7 +53,7 @@ async function generateFonts() {
 
     const fallbackAxes =
       webfontsMetaMap[typeface.family]?.axes?.map(
-        (axis): FamilyMetadataListAxe => ({
+        (axis): FamilyMetadataListAxis => ({
           defaultValue: axesRegistryMap[axis.tag].defaultValue ?? 0,
           max: axis.end,
           min: axis.start,

@@ -23,11 +23,11 @@ export interface Item {
     category:           ItemCategory;
     kind:               Kind;
     menu:               string;
-    axes?:              ItemAxe[];
+    axes?:              ItemAxis[];
     colorCapabilities?: ItemColorCapability[];
 }
 
-export interface ItemAxe {
+export interface ItemAxis {
     tag:   string;
     start: number;
     end:   number;
@@ -112,7 +112,7 @@ export interface FamilyMetadataList {
     size:              number;
     subsets:           string[];
     fonts:             { [key: string]: Font };
-    axes:              FamilyMetadataListAxe[];
+    axes:              FamilyMetadataListAxis[];
     designers:         string[];
     lastModified:      Date;
     dateAdded:         Date;
@@ -129,7 +129,7 @@ export interface FamilyMetadataList {
     languages:         any[];
 }
 
-export interface FamilyMetadataListAxe {
+export interface FamilyMetadataListAxis {
     tag:          string;
     min:          number;
     max:          number;
@@ -378,10 +378,10 @@ const typeMap: any = {
         { json: "category", js: "category", typ: r("ItemCategory") },
         { json: "kind", js: "kind", typ: r("Kind") },
         { json: "menu", js: "menu", typ: "" },
-        { json: "axes", js: "axes", typ: u(undefined, a(r("ItemAxe"))) },
+        { json: "axes", js: "axes", typ: u(undefined, a(r("ItemAxis"))) },
         { json: "colorCapabilities", js: "colorCapabilities", typ: u(undefined, a(r("ItemColorCapability"))) },
     ], false),
-    "ItemAxe": o([
+    "ItemAxis": o([
         { json: "tag", js: "tag", typ: "" },
         { json: "start", js: "start", typ: 3.14 },
         { json: "end", js: "end", typ: 3.14 },
@@ -437,7 +437,7 @@ const typeMap: any = {
         { json: "size", js: "size", typ: 0 },
         { json: "subsets", js: "subsets", typ: a("") },
         { json: "fonts", js: "fonts", typ: m(r("Font")) },
-        { json: "axes", js: "axes", typ: a(r("FamilyMetadataListAxe")) },
+        { json: "axes", js: "axes", typ: a(r("FamilyMetadataListAxis")) },
         { json: "designers", js: "designers", typ: a("") },
         { json: "lastModified", js: "lastModified", typ: Date },
         { json: "dateAdded", js: "dateAdded", typ: Date },
@@ -453,7 +453,7 @@ const typeMap: any = {
         { json: "isBrandFont", js: "isBrandFont", typ: true },
         { json: "languages", js: "languages", typ: a("any") },
     ], false),
-    "FamilyMetadataListAxe": o([
+    "FamilyMetadataListAxis": o([
         { json: "tag", js: "tag", typ: "" },
         { json: "min", js: "min", typ: 3.14 },
         { json: "max", js: "max", typ: 3.14 },
