@@ -1,4 +1,4 @@
-import opentype from 'opentype.js';
+import opentype from '@paper-design/opentype.js';
 import makerjs from 'makerjs';
 import { optimize } from 'svgo';
 import { fetchGoogleFonts } from './fetch-google-fonts';
