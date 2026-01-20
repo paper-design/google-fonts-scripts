@@ -85,6 +85,7 @@ async function generateFonts() {
     }
 
     // Download and parse font to extract OpenType features
+    // @TODO: we'll actually want to track two arrays, one for the normal weights and one for the italic weights
     const closestVariant = findClosestVariantToNormalWeight(typeface.variants);
     const fontUrl = typeface.files[closestVariant];
     if (fontUrl) {
