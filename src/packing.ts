@@ -20,6 +20,7 @@ type FontBox = {
   fileName: string;
   variants: string[];
   axes?: { min: number; max: number; tag: string; defaultValue: number }[];
+  features?: { tag: string; name?: string }[];
   buffer?: Buffer;
   noPreview?: boolean;
 };
@@ -49,6 +50,10 @@ type FontMetadata = {
    * axes available for the font
    */
   a?: Record<string, { min: number; max: number; defaultValue: number }>;
+  /**
+   * OpenType features available for the font
+   */
+  f?: { t: string; n?: string }[];
   /**
    * indicates if the font has no preview image
    */
@@ -94,6 +99,7 @@ const createFontChunks = async () => {
         fileName,
         variants: styles.variants,
         axes: styles.axes,
+        features: styles.features,
         noPreview: true,
       });
       continue;
@@ -111,6 +117,7 @@ const createFontChunks = async () => {
         fileName,
         variants: styles.variants,
         axes: styles.axes,
+        features: styles.features,
         noPreview: true,
       });
       continue;
@@ -138,6 +145,7 @@ const createFontChunks = async () => {
           fileName,
           variants: styles.variants,
           axes: styles.axes,
+          features: styles.features,
           buffer: resizedBuffer,
         });
       } else {
@@ -152,6 +160,7 @@ const createFontChunks = async () => {
           fileName,
           variants: styles.variants,
           axes: styles.axes,
+          features: styles.features,
           noPreview: true,
         });
       }
@@ -169,6 +178,7 @@ const createFontChunks = async () => {
         fileName,
         variants: styles.variants,
         axes: styles.axes,
+        features: styles.features,
         noPreview: true,
       });
     }
@@ -258,6 +268,7 @@ const createFontChunks = async () => {
           };
           return acc;
         }, {} as Exclude<FontMetadata['a'], undefined>),
+        f: box.features ? box.features.map((feature) => ({ t: feature.tag, n: feature.name })) : undefined,
       };
     });
 
@@ -287,6 +298,7 @@ const createFontChunks = async () => {
         };
         return acc;
       }, {} as Exclude<FontMetadata['a'], undefined>),
+      f: box.features ? box.features.map((feature) => ({ t: feature.tag, n: feature.name })) : undefined,
       noPreview: true,
     };
   });
