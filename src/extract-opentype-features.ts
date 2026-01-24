@@ -13,6 +13,8 @@ export function extractFeatures(font: opentype.Font): { tag: string; name?: stri
   const gsub = font.tables.gsub;
 
   // Extract feature tags from GSUB table
+  // @TODO: store features in two arrays, one for the normal weights and one for the italic weights
+  // See https://paper-design.slack.com/archives/C0A27B13N48/p1768931347862499?thread_ts=1768869978.138909&cid=C0A27B13N48
   if (gsub?.features) {
     for (const f of gsub.features) {
       const tag = f.tag;
