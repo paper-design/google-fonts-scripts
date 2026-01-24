@@ -11,7 +11,8 @@ const logSink: string[] = [];
 export interface FontValue {
   variants: string[];
   axes?: { min: number; max: number; tag: string; defaultValue: number }[];
-  features?: { tag: string; name?: string }[];
+  // features?: { tag: string; name?: string }[];
+  features?: 1;
 }
 
 async function generateFonts() {
@@ -97,7 +98,13 @@ async function generateFonts() {
         const font = opentype.parse(buffer);
         const features = extractFeatures(font);
         if (Object.keys(features).length > 0) {
-          typefaces[typeface.family].features = features;
+          // Note: Google Fonts doesn't serve features when requesting the fonts yet,
+          // but we know which fonts have which features from our script because we download and parse them.
+          // For now, we just set `.features` to 1 to indicate that the font has features.
+          // In the future, if we decide to host and serve the fonts ourselves, we can return the actual `features` object.
+
+          // typefaces[typeface.family].features = features;
+          typefaces[typeface.family].features = 1;
         }
       } catch (e) {
         logSink.push(`Failed to extract features for ${typeface.family}: ${e}`);
