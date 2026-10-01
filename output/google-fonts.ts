@@ -87,8 +87,8 @@ export interface AxisRegistry {
     precision:        number;
     description:      string;
     fallbackOnly:     boolean;
-    illustrationUrl?: string;
     fallbacks:        Fallback[];
+    illustrationUrl?: string;
 }
 
 export interface Fallback {
@@ -181,6 +181,7 @@ export enum PrimaryLanguage {
     SkLatn = "sk_Latn",
     ViLatn = "vi_Latn",
     YueHant = "yue_Hant",
+    ZagBerf = "zag_Berf",
     ZhHans = "zh_Hans",
     ZhHant = "zh_Hant",
 }
@@ -420,8 +421,8 @@ const typeMap: any = {
         { json: "precision", js: "precision", typ: 0 },
         { json: "description", js: "description", typ: "" },
         { json: "fallbackOnly", js: "fallbackOnly", typ: true },
-        { json: "illustrationUrl", js: "illustrationUrl", typ: u(undefined, "") },
         { json: "fallbacks", js: "fallbacks", typ: a(r("Fallback")) },
+        { json: "illustrationUrl", js: "illustrationUrl", typ: u(undefined, "") },
     ], false),
     "Fallback": o([
         { json: "name", js: "name", typ: "" },
@@ -521,6 +522,7 @@ const typeMap: any = {
         "sk_Latn",
         "vi_Latn",
         "yue_Hant",
+        "zag_Berf",
         "zh_Hans",
         "zh_Hant",
     ],

@@ -29,7 +29,8 @@ class FontPreviewGenerator {
     this.context = null;
     this.completedFonts = new Set();
     this.errorFonts = new Set();
-    this.fontLoadTimeout = 5000;
+    // Large CJK fonts (M PLUS U, LINE Seed JP, Bpmf *) take well over 5s to download
+    this.fontLoadTimeout = 30000;
   }
 
   async initialize() {
