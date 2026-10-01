@@ -1,5 +1,8 @@
 import type { AxisRegistry, FamilyMetadataList, FamilyMetadataListAxe, Item } from '../output/google-fonts';
+import { extractFeatures } from './extract-opentype-features';
 import { fetchGoogleFonts, fetchGoogleFontsMeta, fetchGoogleFontsVariable } from './fetch-google-fonts';
+import { findClosestVariantToNormalWeight } from './find-closest-variant-to-normal-weight';
+import opentype from '@paper-design/opentype.js';
 import { sortAxes } from './sort';
 import { OUTPUT_DIR } from './vars';
 
@@ -8,6 +11,8 @@ const logSink: string[] = [];
 export interface FontValue {
   variants: string[];
   axes?: { min: number; max: number; tag: string; defaultValue: number }[];
+  // features?: { tag: string; name?: string }[];
+  features?: 1;
 }
 
 async function generateFonts() {
@@ -78,6 +83,32 @@ async function generateFonts() {
     for (const variant of typeface.variants) {
       const key = variant === 'regular' ? '400' : variant === 'italic' ? '400i' : variant.replace('italic', 'i');
       typefaces[typeface.family].variants.push(key);
+    }
+
+    // Download and parse font to extract OpenType features
+    // @TODO: we'll actually want to track two arrays, one for the normal weights and one for the italic weights
+    const closestVariant = findClosestVariantToNormalWeight(typeface.variants);
+    const fontUrl = typeface.files[closestVariant];
+    if (fontUrl) {
+      try {
+        console.log(`Downloading font ${fontUrl}...`);
+
+        const response = await fetch(fontUrl);
+        const buffer = await response.arrayBuffer();
+        const font = opentype.parse(buffer);
+        const features = extractFeatures(font);
+        if (Object.keys(features).length > 0) {
+          // Note: Google Fonts doesn't serve features when requesting the fonts yet,
+          // but we know which fonts have which features from our script because we download and parse them.
+          // For now, we just set `.features` to 1 to indicate that the font has features.
+          // In the future, if we decide to host and serve the fonts ourselves, we can return the actual `features` object.
+
+          // typefaces[typeface.family].features = features;
+          typefaces[typeface.family].features = 1;
+        }
+      } catch (e) {
+        logSink.push(`Failed to extract features for ${typeface.family}: ${e}`);
+      }
     }
   }
 

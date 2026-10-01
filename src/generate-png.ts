@@ -29,8 +29,7 @@ class FontPreviewGenerator {
     this.context = null;
     this.completedFonts = new Set();
     this.errorFonts = new Set();
-    // Large CJK fonts (M PLUS U, LINE Seed JP, Bpmf *) take well over 5s to download
-    this.fontLoadTimeout = 30000;
+    this.fontLoadTimeout = 5000;
   }
 
   async initialize() {
@@ -104,10 +103,14 @@ class FontPreviewGenerator {
         const fontLoaded = await Promise.race([
           page.waitForFunction(
             (fontFamily) => {
-              if (document.fonts.check(`1em "${fontFamily}"`)) {
-                return true;
-              }
-              return false;
+              // Don't use document.fonts.check() here: for fonts split into 100+ unicode-range
+              // subsets (M PLUS U, LINE Seed JP, Bpmf *), Chromium returns false even once the
+              // latin subset has loaded and the text is rendering with it.
+              let loaded = false;
+              document.fonts.forEach((face) => {
+                if (face.family.replace(/^"|"$/g, '') === fontFamily && face.status === 'loaded') loaded = true;
+              });
+              return loaded;
             },
             fontFamily,
             { timeout: this.fontLoadTimeout }
